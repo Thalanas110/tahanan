@@ -60,15 +60,15 @@ export default function Checkins() {
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="space-y-3">
                 <Label>Overall Mood</Label>
-                <ToggleGroup 
-                  type="single" 
-                  value={mood} 
-                  onValueChange={(v) => { if(v) setMood(v); }}
+                <ToggleGroup
+                  type="single"
+                  value={mood}
+                  onValueChange={(v) => { if (v) setMood(v); }}
                   className="justify-start flex-wrap gap-2"
                 >
                   {MOODS.map(m => (
-                    <ToggleGroupItem 
-                      key={m.value} 
+                    <ToggleGroupItem
+                      key={m.value}
                       value={m.value}
                       className="rounded-full px-4 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                     >
@@ -83,12 +83,12 @@ export default function Checkins() {
                   <Label>Energy Level</Label>
                   <span className="text-sm font-medium text-primary">{energy[0]} / 5</span>
                 </div>
-                <Slider 
-                  value={energy} 
-                  onValueChange={setEnergy} 
-                  max={5} 
-                  min={1} 
-                  step={1} 
+                <Slider
+                  value={energy}
+                  onValueChange={setEnergy}
+                  max={5}
+                  min={1}
+                  step={1}
                   className="py-4"
                 />
                 <div className="flex justify-between text-xs text-muted-foreground">
@@ -99,8 +99,8 @@ export default function Checkins() {
 
               <div className="space-y-3">
                 <Label>Add a note (optional)</Label>
-                <Textarea 
-                  placeholder="What's on your mind?" 
+                <Textarea
+                  placeholder="What's on your mind?"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   className="resize-none min-h-[100px]"
@@ -109,10 +109,10 @@ export default function Checkins() {
 
               <div className="flex items-center justify-between border-t border-border pt-4">
                 <div className="flex items-center gap-3">
-                  <Switch 
-                    id="private-mode" 
-                    checked={isPrivate} 
-                    onCheckedChange={setIsPrivate} 
+                  <Switch
+                    id="private-mode"
+                    checked={isPrivate}
+                    onCheckedChange={setIsPrivate}
                   />
                   <Label htmlFor="private-mode" className="flex items-center gap-2 cursor-pointer">
                     {isPrivate ? <Lock className="w-4 h-4 text-muted-foreground" /> : <Unlock className="w-4 h-4 text-muted-foreground" />}

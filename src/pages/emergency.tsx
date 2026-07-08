@@ -68,8 +68,8 @@ export default function Emergency() {
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
               {activeEvent.triggered_by !== user?.id && activeEvent.status === "active" && (
-                <Button 
-                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white" 
+                <Button
+                  className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                   size="lg"
                   onClick={() => acknowledgeSos.mutate(activeEvent.id)}
                   disabled={acknowledgeSos.isPending}
@@ -78,11 +78,11 @@ export default function Emergency() {
                   I'm on my way (Acknowledge)
                 </Button>
               )}
-              
+
               {(activeEvent.triggered_by === user?.id || activeEvent.status === "acknowledged") && (
-                <Button 
-                  className="flex-1" 
-                  variant="outline" 
+                <Button
+                  className="flex-1"
+                  variant="outline"
                   size="lg"
                   onClick={() => resolveSos.mutate(activeEvent.id)}
                   disabled={resolveSos.isPending}
@@ -92,7 +92,7 @@ export default function Emergency() {
                 </Button>
               )}
             </div>
-            
+
             {activeEvent.status === "acknowledged" && (
               <div className="text-center text-sm font-medium text-amber-600 bg-amber-50 p-2 rounded">
                 Acknowledged by {activeEvent.acknowledged_by === user?.id ? "you" : partnerProfile?.display_name}
@@ -105,7 +105,7 @@ export default function Emergency() {
       {/* Trigger Button State */}
       {!activeEvent && !isTriggering && (
         <div className="flex justify-center py-12">
-          <button 
+          <button
             onClick={() => setIsTriggering(true)}
             className="w-48 h-48 rounded-full bg-destructive text-destructive-foreground shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 flex flex-col items-center justify-center gap-2 border-8 border-destructive/20 ring-4 ring-destructive/10"
           >
@@ -126,7 +126,7 @@ export default function Emergency() {
             <form onSubmit={handleTrigger} className="space-y-4">
               <div className="space-y-2">
                 <Label>What's happening? (optional)</Label>
-                <Textarea 
+                <Textarea
                   placeholder="Need you to call me, feeling unsafe, etc."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -135,7 +135,7 @@ export default function Emergency() {
               </div>
               <div className="space-y-2">
                 <Label>Where are you? (optional)</Label>
-                <Input 
+                <Input
                   placeholder="Corner of 5th and Main, or at home"
                   value={locationNote}
                   onChange={(e) => setLocationNote(e.target.value)}
