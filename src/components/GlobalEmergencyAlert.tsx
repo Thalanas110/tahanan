@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useEmergencyEvents, useAcknowledgeSos } from "@/hooks/useEmergency";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, Loader2 } from "lucide-react";
@@ -11,7 +11,6 @@ export function GlobalEmergencyAlert() {
   const [, setLocation] = useLocation();
   const acknowledgeSos = useAcknowledgeSos();
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [interacted, setInteracted] = useState(false);
 
   // An active event is one that is 'active' and NOT triggered by the current user
   const partnerActiveEvent = !authLoading && user ? events?.find(
@@ -29,28 +28,6 @@ export function GlobalEmergencyAlert() {
       audioRef.current.currentTime = 0;
     }
   }, [partnerActiveEvent]);
-
-  // Global listener for user interaction to resume audio if it was blocked by mobile browsers
-  useEffect(() => {
-    if (!partnerActiveEvent) return;
-
-    const handleInteraction = () => {
-      if (!interacted) {
-        setInteracted(true);
-        if (audioRef.current) {
-          audioRef.current.play().catch(() => {});
-        }
-      }
-    };
-
-    window.addEventListener("click", handleInteraction);
-    window.addEventListener("touchstart", handleInteraction);
-
-    return () => {
-      window.removeEventListener("click", handleInteraction);
-      window.removeEventListener("touchstart", handleInteraction);
-    };
-  }, [partnerActiveEvent, interacted]);
 
   if (!partnerActiveEvent) {
     // Keep audio element mounted but hidden so we can reuse it
@@ -92,11 +69,6 @@ export function GlobalEmergencyAlert() {
             ) : null}
             {acknowledgeSos.isPending ? "Acknowledging..." : "Acknowledge SOS"}
           </Button>
-          {!interacted && (
-            <p className="text-sm text-center text-white/70 mt-4 animate-pulse">
-              Tap anywhere on screen to enable alarm sound
-            </p>
-          )}
         </div>
       </div>
     </>
