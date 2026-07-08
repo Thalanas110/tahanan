@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw error;
 
-    if (data.session) {
+    if (data.session && data.user) {
       await supabase
         .from('profiles')
         .upsert({ id: data.user.id, display_name: displayName }, { onConflict: 'id' });
