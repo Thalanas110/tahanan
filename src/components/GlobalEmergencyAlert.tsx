@@ -3,12 +3,12 @@ import { useEmergencyEvents, useAcknowledgeSos } from "@/hooks/useEmergency";
 import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 
 export function GlobalEmergencyAlert() {
   const { data: events } = useEmergencyEvents();
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const acknowledgeSos = useAcknowledgeSos();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [interacted, setInteracted] = useState(false);
@@ -82,7 +82,7 @@ export function GlobalEmergencyAlert() {
             className="w-full text-xl h-16 font-bold bg-white text-destructive hover:bg-white/90 shadow-2xl transition-transform hover:scale-105 active:scale-95"
             onClick={() => {
               acknowledgeSos.mutate(partnerActiveEvent.id, {
-                onSuccess: () => navigate("/emergency")
+                onSuccess: () => setLocation("/emergency")
               });
             }}
             disabled={acknowledgeSos.isPending}
