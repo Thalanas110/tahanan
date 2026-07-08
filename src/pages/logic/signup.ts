@@ -11,8 +11,17 @@ export function useSignupLogic() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!acceptedTerms) {
+      toast.error("Please accept the terms and conditions.");
+      return;
+    }
+    
     setLoading(true);
     try {
       await signUp(email, password, displayName);
@@ -33,5 +42,11 @@ export function useSignupLogic() {
     setPassword,
     loading,
     handleSubmit,
+    acceptedTerms,
+    setAcceptedTerms,
+    hasScrolledToBottom,
+    setHasScrolledToBottom,
+    isTermsModalOpen,
+    setIsTermsModalOpen,
   };
 }
