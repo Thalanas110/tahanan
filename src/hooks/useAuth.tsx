@@ -22,6 +22,7 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -97,6 +98,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function updateDisplayName(displayName: string) {
+    if (!session?.user) throw new Error("Not authenticated");
+    const { error } = await supabase
+      .from('profiles')
+      .update({ display_name: displayName })
+      .eq('id', session.user.id);
+    if (error) throw error;
+    await loadProfile(session.user.id);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -108,6 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         refreshProfile,
+        updateDisplayName,
       }}
     >
       {children}

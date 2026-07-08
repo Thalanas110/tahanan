@@ -5,7 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { Loader2, Heart, HeartOff, Trash2, PenLine, Gift } from "lucide-react";
+import { Loader2, Heart, HeartOff, Trash2, PenLine, Gift, MailOpen } from "lucide-react";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import type { LoveNote } from "@/types/database";
 
 export default function LoveNotes() {
   const {
@@ -26,6 +29,8 @@ export default function LoveNotes() {
     handleSubmit,
     sortedNotes,
   } = useLoveNotesLogic();
+
+  const [selectedNote, setSelectedNote] = useState<LoveNote | null>(null);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -104,7 +109,11 @@ export default function LoveNotes() {
             const authorName = isMine ? "You" : partnerName;
 
             return (
-              <Card key={note.id} className={`flex flex-col h-full ${note.is_favorite ? 'border-accent ring-1 ring-accent/30' : ''}`}>
+              <Card 
+                key={note.id} 
+                className={`flex flex-col h-full cursor-pointer transition-all duration-200 hover:shadow-md hover:border-accent/40 ${note.is_favorite ? 'border-accent ring-1 ring-accent/30' : ''}`}
+                onClick={() => setSelectedNote(note)}
+              >
                 <CardHeader className="pb-3 flex flex-row items-start justify-between space-y-0">
                   <div className="space-y-1">
                     {note.title && <CardTitle className="text-lg font-serif">{note.title}</CardTitle>}
@@ -117,7 +126,10 @@ export default function LoveNotes() {
                       variant="ghost" 
                       size="icon" 
                       className={`h-8 w-8 ${note.is_favorite ? 'text-accent' : 'text-muted-foreground'}`}
-                      onClick={() => toggleFavorite.mutate({ id: note.id, is_favorite: !note.is_favorite })}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite.mutate({ id: note.id, is_favorite: !note.is_favorite });
+                      }}
                     >
                       <Heart className={`w-4 h-4 ${note.is_favorite ? 'fill-current' : ''}`} />
                     </Button>
@@ -126,7 +138,8 @@ export default function LoveNotes() {
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (confirm("Delete this note?")) deleteNote.mutate(note.id);
                         }}
                       >
@@ -141,15 +154,43 @@ export default function LoveNotes() {
                       Open when: {note.open_when}
                     </div>
                   )}
-                  <p className="whitespace-pre-wrap font-serif text-foreground/90 leading-relaxed">
-                    {note.body}
-                  </p>
+                  <div className="flex flex-col items-center justify-center p-6 border border-dashed rounded-lg border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors">
+                    <MailOpen className="w-8 h-8 text-accent mb-2" />
+                    <span className="text-sm font-serif font-medium text-accent">Read Note</span>
+                  </div>
                 </CardContent>
               </Card>
             );
           })}
         </div>
       )}
+
+      <Dialog open={selectedNote !== null} onOpenChange={(open) => !open && setSelectedNote(null)}>
+        <DialogContent className="max-w-md w-11/12 bg-card p-6 border-accent/20">
+          {selectedNote && (
+            <>
+              <DialogHeader className="space-y-1">
+                {selectedNote.open_when && (
+                  <div className="inline-block self-start bg-accent/10 text-accent text-xs px-2 py-1 rounded-full font-medium mb-1">
+                    Open when: {selectedNote.open_when}
+                  </div>
+                )}
+                <DialogTitle className="text-2xl font-serif text-accent">
+                  {selectedNote.title || "A Sweet Note"}
+                </DialogTitle>
+                <DialogDescription className="text-xs text-muted-foreground">
+                  From {selectedNote.created_by === user?.id ? "You" : partnerName} • {format(new Date(selectedNote.created_at), "MMMM d, yyyy 'at' h:mm a")}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 p-5 bg-muted/40 rounded-lg border border-border/50">
+                <p className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-foreground/90 italic">
+                  "{selectedNote.body}"
+                </p>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

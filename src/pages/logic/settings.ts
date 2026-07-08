@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboard, useUpdateCouple } from "@/hooks/useCouple";
+import { useDashboard, useUpdateCouple, dashboardQueryKey } from "@/hooks/useCouple";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useSettingsLogic() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, updateDisplayName } = useAuth();
   const { data: dashboard } = useDashboard();
   const updateCouple = useUpdateCouple();
+  const queryClient = useQueryClient();
   
   const [isEditingName, setIsEditingName] = useState(false);
   const [newName, setNewName] = useState("");
+
+  const [isEditingProfileName, setIsEditingProfileName] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
+  const [isSavingProfileName, setIsSavingProfileName] = useState(false);
   
   const couple = dashboard?.couple;
   const members = dashboard?.members || [];
@@ -29,6 +35,23 @@ export function useSettingsLogic() {
     }
   };
 
+  const handleSaveProfileName = async () => {
+    if (profile && newProfileName.trim() && newProfileName.trim() !== profile.display_name) {
+      setIsSavingProfileName(true);
+      try {
+        await updateDisplayName(newProfileName.trim());
+        await queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
+        setIsEditingProfileName(false);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSavingProfileName(false);
+      }
+    } else {
+      setIsEditingProfileName(false);
+    }
+  };
+
   return {
     profile,
     signOut,
@@ -40,5 +63,11 @@ export function useSettingsLogic() {
     setNewName,
     handleSaveName,
     updateCouple,
+    isEditingProfileName,
+    setIsEditingProfileName,
+    newProfileName,
+    setNewProfileName,
+    isSavingProfileName,
+    handleSaveProfileName,
   };
 }

@@ -17,6 +17,12 @@ export default function Settings() {
     setNewName,
     handleSaveName,
     updateCouple,
+    isEditingProfileName,
+    setIsEditingProfileName,
+    newProfileName,
+    setNewProfileName,
+    isSavingProfileName,
+    handleSaveProfileName,
   } = useSettingsLogic();
 
   return (
@@ -36,7 +42,41 @@ export default function Settings() {
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">Display Name</p>
-            <p className="text-lg">{profile?.display_name}</p>
+            {isEditingProfileName ? (
+              <div className="flex items-center gap-2">
+                <Input 
+                  value={newProfileName} 
+                  onChange={(e) => setNewProfileName(e.target.value)} 
+                  className="max-w-[250px]"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveProfileName();
+                    if (e.key === 'Escape') setIsEditingProfileName(false);
+                  }}
+                />
+                <Button size="icon" variant="ghost" onClick={handleSaveProfileName} disabled={isSavingProfileName}>
+                  <Check className="w-4 h-4 text-green-500" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => setIsEditingProfileName(false)} disabled={isSavingProfileName}>
+                  <X className="w-4 h-4 text-destructive" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="text-lg">{profile?.display_name}</p>
+                <Button 
+                  size="icon" 
+                  variant="ghost" 
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    setNewProfileName(profile?.display_name || "");
+                    setIsEditingProfileName(true);
+                  }}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">Member Since</p>
