@@ -1,8 +1,9 @@
 // POST /functions/v1/trigger-sos  { message?: string, locationNote?: string }
 // User-triggered only -- no background location, no polling. Creates an
 // active emergency_events row that the partner's dashboard picks up via
-// Supabase Realtime.
-import { corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
+// Supabase Realtime, AND sends an SOS email to the partner via Gmail SMTP.
+import { adminClient, corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
+import { sendSosEmail } from '../_shared/mailer.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -19,6 +20,7 @@ Deno.serve(async (req) => {
 
     const { message, locationNote } = await req.json().catch(() => ({}));
 
+    // --- 1. Get couple membership ---
     const { data: membership } = await supabase
       .from('couple_members')
       .select('couple_id')
@@ -27,6 +29,7 @@ Deno.serve(async (req) => {
 
     if (!membership) return errorResponse('You are not part of a couple yet', 400);
 
+    // --- 2. Create the emergency event (in-app alert via Realtime) ---
     const { data: emergency, error } = await supabase
       .from('emergency_events')
       .insert({
@@ -40,6 +43,47 @@ Deno.serve(async (req) => {
       .single();
 
     if (error) return errorResponse(error.message, 400);
+
+    // --- 3. Send email to partner (non-blocking — SOS is always created first) ---
+    (async () => {
+      try {
+        const admin = adminClient();
+
+        // Get all couple members
+        const { data: members } = await admin
+          .from('couple_members')
+          .select('user_id')
+          .eq('couple_id', membership.couple_id);
+
+        const partnerId = members?.find((m) => m.user_id !== user.id)?.user_id;
+        if (!partnerId) return; // solo couple, no partner yet
+
+        // Get partner auth record for their email
+        const { data: { user: partnerUser } } = await admin.auth.admin.getUserById(partnerId);
+        if (!partnerUser?.email) return;
+
+        // Get display names from profiles
+        const { data: profiles } = await admin
+          .from('profiles')
+          .select('id, display_name')
+          .in('id', [user.id, partnerId]);
+
+        const triggerName = profiles?.find((p) => p.id === user.id)?.display_name ?? 'Your partner';
+        const partnerName = profiles?.find((p) => p.id === partnerId)?.display_name ?? 'there';
+
+        await sendSosEmail({
+          partnerEmail: partnerUser.email,
+          partnerName,
+          triggerName,
+          message: message ?? null,
+          locationNote: locationNote ?? null,
+          triggeredAt: emergency.created_at,
+        });
+      } catch (emailErr) {
+        // Log but never block the response — in-app alert already worked.
+        console.error('[trigger-sos] Email send failed:', emailErr);
+      }
+    })();
 
     return jsonResponse({ emergency });
   } catch (err) {

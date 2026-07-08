@@ -28,6 +28,17 @@ export function userClient(req: Request) {
   );
 }
 
+// Service-role client — bypasses RLS. Use only for trusted server-side ops
+// (e.g. reading auth.users to get a partner's email). SUPABASE_SERVICE_ROLE_KEY
+// is a built-in secret available in all Supabase Edge Functions.
+export function adminClient() {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+}
+
 export function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
