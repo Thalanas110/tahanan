@@ -109,6 +109,8 @@ export interface EmergencyEvent {
   status: EmergencyStatus;
   message: string | null;
   location_note: string | null;
+  latitude: number | null;
+  longitude: number | null;
   acknowledged_by: string | null;
   acknowledged_at: string | null;
   created_at: string;

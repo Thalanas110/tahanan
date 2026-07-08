@@ -56,7 +56,7 @@ export function useEmergencyRealtime(coupleId: string | null | undefined) {
 export function useTriggerSos() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { message?: string; locationNote?: string }) =>
+    mutationFn: (input: { message?: string; locationNote?: string; latitude?: number; longitude?: number }) =>
       invokeEdgeFunction<{ emergency: EmergencyEvent }>('trigger-sos', input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: emergencyQueryKey });

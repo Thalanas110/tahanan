@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
     if (!user) return errorResponse('Not authenticated', 401);
 
-    const { message, locationNote } = await req.json().catch(() => ({}));
+    const { message, locationNote, latitude, longitude } = await req.json().catch(() => ({}));
 
     // --- 1. Get couple membership ---
     const { data: membership } = await supabase
@@ -38,6 +38,8 @@ Deno.serve(async (req) => {
         status: 'active',
         message: message ?? null,
         location_note: locationNote ?? null,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
       })
       .select()
       .single();

@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { AlertTriangle, MapPin, Loader2, CheckCircle, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { EmergencyMap } from "@/components/EmergencyMap";
 
 export default function Emergency() {
   const {
@@ -26,6 +27,8 @@ export default function Emergency() {
     pastEvents,
     partnerProfile,
     handleTrigger,
+    responderLat,
+    responderLon,
   } = useEmergencyLogic();
 
   return (
@@ -62,6 +65,20 @@ export default function Emergency() {
                 <div className="flex items-start gap-2 text-muted-foreground bg-muted/20 p-3 rounded-lg">
                   <MapPin className="w-5 h-5 shrink-0 mt-0.5" />
                   <p>{activeEvent.location_note}</p>
+                </div>
+              )}
+              {activeEvent.latitude && activeEvent.longitude && (
+                <div className="space-y-2 mt-4">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <span>GPS: {activeEvent.latitude.toFixed(6)}, {activeEvent.longitude.toFixed(6)}</span>
+                  </div>
+                  <EmergencyMap 
+                    triggerLat={activeEvent.latitude}
+                    triggerLon={activeEvent.longitude}
+                    responderLat={activeEvent.triggered_by !== user?.id ? responderLat : undefined}
+                    responderLon={activeEvent.triggered_by !== user?.id ? responderLon : undefined}
+                  />
                 </div>
               )}
             </div>
