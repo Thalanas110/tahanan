@@ -72,13 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     if (error) throw error;
 
-    if (data.user) {
-      // Fallback in case the DB trigger hasn't run yet (e.g. no email
-      // confirmation delay) -- upsert is safe either way.
+    if (data.session) {
       await supabase
         .from('profiles')
         .upsert({ id: data.user.id, display_name: displayName }, { onConflict: 'id' });
       await loadProfile(data.user.id);
+    } else if (data.user) {
+      throw new Error("Account created! Please check your email to verify your account before logging in.");
     }
   }
 
