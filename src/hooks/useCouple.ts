@@ -41,3 +41,24 @@ export function useJoinCouple() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
   });
 }
+
+export function useUpdateCouple() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ coupleId, name }: { coupleId: string; name: string }) => {
+      // Import supabase client dynamically to avoid circular dependencies if any
+      const { supabase } = await import('@/lib/supabase');
+      const { data, error } = await supabase
+        .from('couples')
+        .update({ name })
+        .eq('id', coupleId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
+  });
+}
+

@@ -1,18 +1,38 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
+import { useDashboard, useUpdateCouple } from "@/hooks/useCouple";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LogOut, HeartHandshake, User as UserIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { LogOut, HeartHandshake, User as UserIcon, Edit2, Check, X } from "lucide-react";
 import { format } from "date-fns";
 
 export default function Settings() {
   const { profile, signOut } = useAuth();
   const { data: dashboard } = useDashboard();
+  const updateCouple = useUpdateCouple();
+  
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
   
   const couple = dashboard?.couple;
   const members = dashboard?.members || [];
   const partnerProfile = members.find(m => m.user_id !== profile?.id)?.profiles;
+
+  const handleSaveName = () => {
+    if (couple && newName.trim() && newName.trim() !== couple.name) {
+      updateCouple.mutate(
+        { coupleId: couple.id, name: newName.trim() },
+        {
+          onSuccess: () => {
+            setIsEditingName(false);
+          }
+        }
+      );
+    } else {
+      setIsEditingName(false);
+    }
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl mx-auto">
@@ -52,7 +72,41 @@ export default function Settings() {
           <CardContent className="space-y-6">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Space Name</p>
-              <p className="text-lg">{couple.name}</p>
+              {isEditingName ? (
+                <div className="flex items-center gap-2">
+                  <Input 
+                    value={newName} 
+                    onChange={(e) => setNewName(e.target.value)} 
+                    className="max-w-[250px]"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveName();
+                      if (e.key === 'Escape') setIsEditingName(false);
+                    }}
+                  />
+                  <Button size="icon" variant="ghost" onClick={handleSaveName} disabled={updateCouple.isPending}>
+                    <Check className="w-4 h-4 text-green-500" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => setIsEditingName(false)} disabled={updateCouple.isPending}>
+                    <X className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-lg">{couple.name}</p>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setNewName(couple.name);
+                      setIsEditingName(true);
+                    }}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
             
             <div className="space-y-1">
