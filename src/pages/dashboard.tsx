@@ -16,7 +16,7 @@ function getEnergyLabel(level: number | null) {
 export default function Dashboard() {
   const { data: dashboard } = useDashboard();
   const { user } = useAuth();
-  
+
   if (!dashboard || !dashboard.couple) return null;
 
   const myProfile = dashboard.members.find(m => m.user_id === user?.id)?.profiles;
@@ -69,7 +69,7 @@ export default function Dashboard() {
               View history <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
-          
+
           <div className="grid gap-4">
             {/* My Checkin */}
             <Card className="bg-card shadow-sm border-border overflow-hidden">
@@ -153,7 +153,7 @@ export default function Dashboard() {
                 Full calendar
               </Link>
             </div>
-            
+
             <Card>
               <CardContent className="p-0">
                 {todaysEvents.length > 0 ? (
