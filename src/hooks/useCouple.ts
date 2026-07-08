@@ -13,10 +13,11 @@ export interface DashboardSummary {
 
 export const dashboardQueryKey = ['dashboard-summary'] as const;
 
-export function useDashboard() {
+export function useDashboard(enabled = true) {
   return useQuery({
     queryKey: dashboardQueryKey,
     queryFn: () => invokeEdgeFunction<DashboardSummary>('dashboard-summary'),
+    enabled,
   });
 }
 

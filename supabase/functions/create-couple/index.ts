@@ -1,7 +1,13 @@
 // POST /functions/v1/create-couple  { name: string }
 // Creates a couple space owned by the caller, generates a 6-character invite
 // code, and adds the caller as its first member.
-import { corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
+//
+// All writes use the admin (service-role) client to avoid a circular RLS
+// deadlock: inserting into `couples` with .select() requires a SELECT, but
+// the couples SELECT policy requires is_couple_member() — impossible for a
+// brand-new couple where the creator isn't a member yet.
+// Identity is verified up front via the user JWT before any writes happen.
+import { adminClient, corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
 
 function generateInviteCode(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
@@ -18,6 +24,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // 1. Verify caller identity via their JWT (runs under RLS).
     const supabase = userClient(req);
     const {
       data: { user },
@@ -30,6 +37,7 @@ Deno.serve(async (req) => {
       return errorResponse('name is required');
     }
 
+    // 2. Check existing membership via user client (RLS-scoped to their rows).
     const { data: existingMembership } = await supabase
       .from('couple_members')
       .select('couple_id')
@@ -40,9 +48,13 @@ Deno.serve(async (req) => {
       return errorResponse('You are already part of a couple', 400);
     }
 
+    // 3. All writes go through the admin client to avoid the RLS catch-22.
+    const admin = adminClient();
+
+    // Pick a unique invite code.
     let inviteCode = generateInviteCode();
     for (let attempt = 0; attempt < 5; attempt++) {
-      const { data: existing } = await supabase
+      const { data: existing } = await admin
         .from('couples')
         .select('id')
         .eq('invite_code', inviteCode)
@@ -51,7 +63,8 @@ Deno.serve(async (req) => {
       inviteCode = generateInviteCode();
     }
 
-    const { data: couple, error: coupleError } = await supabase
+    // Insert the couple.
+    const { data: couple, error: coupleError } = await admin
       .from('couples')
       .insert({ name, invite_code: inviteCode, created_by: user.id })
       .select()
@@ -59,7 +72,8 @@ Deno.serve(async (req) => {
 
     if (coupleError) return errorResponse(coupleError.message, 400);
 
-    const { error: memberError } = await supabase
+    // Insert the creator as first member.
+    const { error: memberError } = await admin
       .from('couple_members')
       .insert({ couple_id: couple.id, user_id: user.id, role: 'partner' });
 

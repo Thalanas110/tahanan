@@ -35,7 +35,10 @@ export default function Emergency() {
         message: message.trim() || undefined,
         locationNote: locationNote.trim() || undefined,
       });
-      toast.success("SOS Alert Sent!");
+      toast.success("SOS Alert Sent!", {
+        description: "An email has been dispatched to your partner — ask them to check their inbox.",
+        duration: 6000,
+      });
       setIsTriggering(false);
       setMessage("");
       setLocationNote("");

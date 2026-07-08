@@ -27,6 +27,12 @@ export default function Onboarding() {
       setCreatedInviteCode(res.couple.invite_code);
       toast.success("Space created! Share your code with your partner.");
     } catch (err: any) {
+      // If we're already coupled (stale cache / double-submit), just go home.
+      if (err?.message?.toLowerCase().includes("already part of a couple")) {
+        toast.info("You already have a space — taking you there.");
+        setLocation("/");
+        return;
+      }
       toast.error(err.message || "Failed to create space");
     }
   }

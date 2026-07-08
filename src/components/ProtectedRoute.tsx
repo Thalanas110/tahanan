@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading: authLoading } = useAuth();
-  const { data: dashboard, isLoading: dashboardLoading, isError, error, refetch } = useDashboard();
+  const { data: dashboard, isLoading: dashboardLoading, isError, error, refetch } = useDashboard(!!session);
   const [location] = useLocation();
 
   if (authLoading) {
@@ -58,9 +58,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Redirect to="/onboarding" />;
   }
 
-  if (!isUncoupled && location === "/onboarding") {
-    return <Redirect to="/" />;
-  }
+  // Note: we intentionally do NOT auto-redirect coupled users away from
+  // /onboarding here. The Onboarding page navigates to "/" itself once the
+  // user dismisses the invite-code success screen. Auto-redirecting here
+  // would unmount the invite-code screen before the user can see or copy it.
 
   return <>{children}</>;
 }

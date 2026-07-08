@@ -41,12 +41,13 @@ export async function invokeEdgeFunction<T>(
     // FunctionsHttpError carries the real error message in the response body.
     const context = (error as { context?: Response }).context;
     if (context) {
+      let payload: { error?: string } | null = null;
       try {
-        const payload = await context.clone().json();
-        throw new Error(payload.error ?? error.message);
+        payload = await context.clone().json();
       } catch {
-        throw new Error(error.message);
+        // JSON parse failed; fall through to generic message
       }
+      throw new Error(payload?.error ?? error.message);
     }
     throw new Error(error.message);
   }
