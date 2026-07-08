@@ -15,7 +15,7 @@ export function useLoginLogic() {
     setLoading(true);
     try {
       await signIn(email, password);
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Failed to sign in");
     } finally {

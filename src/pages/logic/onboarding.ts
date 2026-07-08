@@ -24,7 +24,7 @@ export function useOnboardingLogic() {
       // If we're already coupled (stale cache / double-submit), just go home.
       if (err?.message?.toLowerCase().includes("already part of a couple")) {
         toast.info("You already have a space — taking you there.");
-        setLocation("/");
+        setLocation("/dashboard");
         return;
       }
       toast.error(err.message || "Failed to create space");
@@ -40,7 +40,7 @@ export function useOnboardingLogic() {
     try {
       await joinCouple.mutateAsync(inviteCode.toUpperCase());
       toast.success("Joined successfully!");
-      setLocation("/");
+      setLocation("/dashboard");
     } catch (err: any) {
       toast.error(err.message || "Failed to join. Check the code and try again.");
     }

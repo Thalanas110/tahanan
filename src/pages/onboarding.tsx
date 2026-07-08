@@ -40,7 +40,7 @@ export default function Onboarding() {
             <p className="text-sm text-muted-foreground mb-8">
               They can enter this code when they sign up to join your shared space.
             </p>
-            <Button onClick={() => setLocation("/")} className="w-full" size="lg">
+            <Button onClick={() => setLocation("/dashboard")} className="w-full" size="lg">
               Go to our home
             </Button>
           </CardContent>
