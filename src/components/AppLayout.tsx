@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useDashboard } from "@/hooks/useCouple";
 import { useEmergencyRealtime } from "@/hooks/useEmergency";
 import { Navbar } from "./Navbar";
+import { GlobalEmergencyAlert } from "./GlobalEmergencyAlert";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { data: dashboard } = useDashboard();
@@ -10,6 +11,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-[100dvh] flex flex-col md:flex-row bg-background w-full">
+      <GlobalEmergencyAlert />
       <Navbar />
 
       {/* Main Content */}
