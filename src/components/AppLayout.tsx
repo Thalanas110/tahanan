@@ -87,9 +87,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-lg min-w-[4rem] transition-colors",
-                location === item.href 
-                  ? "text-primary" 
+                "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3.5rem] transition-colors",
+                location === item.href
+                  ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -98,9 +98,19 @@ export function AppLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <Link
+            href="/settings"
+            className={cn(
+              "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3.5rem] transition-colors",
+              location === "/settings" ? "text-primary" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Settings className={cn("w-5 h-5 mb-1", location === "/settings" && "fill-primary/20")} />
+            <span className="text-[10px] font-medium">Settings</span>
+          </Link>
+          <Link
             href="/emergency"
             className={cn(
-              "flex flex-col items-center justify-center p-2 rounded-lg min-w-[4rem] transition-colors",
+              "flex flex-col items-center justify-center p-2 rounded-lg min-w-[3.5rem] transition-colors",
               location === "/emergency" ? "text-destructive" : "text-destructive/80"
             )}
           >
@@ -109,6 +119,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           </Link>
         </div>
       </nav>
+
     </div>
   );
 }
