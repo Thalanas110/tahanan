@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { useDashboard, useUpdateCouple } from "@/hooks/useCouple";
+import { useSettingsLogic } from "./logic/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,31 +6,18 @@ import { LogOut, HeartHandshake, User as UserIcon, Edit2, Check, X } from "lucid
 import { format } from "date-fns";
 
 export default function Settings() {
-  const { profile, signOut } = useAuth();
-  const { data: dashboard } = useDashboard();
-  const updateCouple = useUpdateCouple();
-  
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [newName, setNewName] = useState("");
-  
-  const couple = dashboard?.couple;
-  const members = dashboard?.members || [];
-  const partnerProfile = members.find(m => m.user_id !== profile?.id)?.profiles;
-
-  const handleSaveName = () => {
-    if (couple && newName.trim() && newName.trim() !== couple.name) {
-      updateCouple.mutate(
-        { coupleId: couple.id, name: newName.trim() },
-        {
-          onSuccess: () => {
-            setIsEditingName(false);
-          }
-        }
-      );
-    } else {
-      setIsEditingName(false);
-    }
-  };
+  const {
+    profile,
+    signOut,
+    couple,
+    partnerProfile,
+    isEditingName,
+    setIsEditingName,
+    newName,
+    setNewName,
+    handleSaveName,
+    updateCouple,
+  } = useSettingsLogic();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl mx-auto">

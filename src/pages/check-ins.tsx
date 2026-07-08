@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { useCheckins, useCreateCheckin } from "@/hooks/useCheckins";
-import { useAuth } from "@/hooks/useAuth";
+import { useCheckinsLogic } from "./logic/check-ins";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,9 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Loader2, Lock, Unlock } from "lucide-react";
-import { useDashboard } from "@/hooks/useCouple";
 
 const MOODS = [
   { value: "great", label: "Great" },
@@ -22,46 +18,25 @@ const MOODS = [
 ];
 
 export default function Checkins() {
-  const { data: checkins, isLoading } = useCheckins();
-  const createCheckin = useCreateCheckin();
-  const { user } = useAuth();
-  const { data: dashboard } = useDashboard();
-  
-  const [mood, setMood] = useState("");
-  const [energy, setEnergy] = useState<number[]>([3]);
-  const [note, setNote] = useState("");
-  const [isPrivate, setIsPrivate] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!mood) {
-      toast.error("Please select a mood");
-      return;
-    }
-    if (!dashboard?.couple?.id) return;
-
-    try {
-      await createCheckin.mutateAsync({
-        couple_id: dashboard.couple.id,
-        mood,
-        energy_level: energy[0],
-        note: note.trim() || undefined,
-        is_private: isPrivate,
-      });
-      toast.success("Check-in logged");
-      setIsFormOpen(false);
-      setMood("");
-      setEnergy([3]);
-      setNote("");
-      setIsPrivate(false);
-    } catch (err) {
-      toast.error("Failed to log check-in");
-    }
-  }
+  const {
+    checkins,
+    isLoading,
+    createCheckin,
+    user,
+    myProfile,
+    partnerProfile,
+    mood,
+    setMood,
+    energy,
+    setEnergy,
+    note,
+    setNote,
+    isPrivate,
+    setIsPrivate,
+    isFormOpen,
+    setIsFormOpen,
+    handleSubmit,
+  } = useCheckinsLogic();
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">

@@ -1,32 +1,20 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useLoginLogic } from "./logic/login";
+import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function Login() {
-  const { signIn } = useAuth();
-  const [, setLocation] = useLocation();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signIn(email, password);
-      setLocation("/");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to sign in");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    handleSubmit,
+  } = useLoginLogic();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">

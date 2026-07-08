@@ -1,61 +1,33 @@
-import { useState } from "react";
-import { useTasks, useCreateTask, useUpdateTaskStatus, useDeleteTask } from "@/hooks/useTasks";
-import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
+import { useTasksLogic } from "./logic/tasks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Loader2, CheckSquare, Clock, Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
-import type { TaskStatus } from "@/types/database";
 
 export default function Tasks() {
-  const { data: tasks, isLoading } = useTasks();
-  const createTask = useCreateTask();
-  const updateStatus = useUpdateTaskStatus();
-  const deleteTask = useDeleteTask();
-  const { user } = useAuth();
-  const { data: dashboard } = useDashboard();
-  
-  const [isAdding, setIsAdding] = useState(false);
-  const [title, setTitle] = useState("");
-  const [assignee, setAssignee] = useState<string>("unassigned");
-  const [priority, setPriority] = useState("normal");
-
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!title.trim() || !dashboard?.couple?.id) return;
-
-    try {
-      await createTask.mutateAsync({
-        couple_id: dashboard.couple.id,
-        title: title.trim(),
-        assigned_to: assignee === "unassigned" ? undefined : assignee,
-        priority: priority,
-      });
-      toast.success("Task added");
-      setIsAdding(false);
-      setTitle("");
-      setAssignee("unassigned");
-      setPriority("normal");
-    } catch (err) {
-      toast.error("Failed to add task");
-    }
-  }
-
-  function handleToggleStatus(task: any) {
-    const newStatus: TaskStatus = task.status === "done" ? "pending" : "done";
-    updateStatus.mutate({ id: task.id, status: newStatus });
-  }
-
-  const pendingTasks = tasks?.filter(t => t.status !== "done") || [];
-  const completedTasks = tasks?.filter(t => t.status === "done") || [];
+  const {
+    isLoading,
+    createTask,
+    deleteTask,
+    dashboard,
+    isAdding,
+    setIsAdding,
+    title,
+    setTitle,
+    assignee,
+    setAssignee,
+    priority,
+    setPriority,
+    myProfile,
+    partnerProfile,
+    handleSubmit,
+    handleToggleStatus,
+    pendingTasks,
+    completedTasks,
+  } = useTasksLogic();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

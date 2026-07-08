@@ -1,31 +1,23 @@
-import { useDashboard } from "@/hooks/useCouple";
-import { useAuth } from "@/hooks/useAuth";
+import { useDashboardLogic, getEnergyLabel } from "./logic/dashboard";
 import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { format, isToday } from "date-fns";
 import { Heart, Calendar as CalendarIcon, AlertCircle, ArrowRight, Battery, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-function getEnergyLabel(level: number | null) {
-  if (!level) return "Unknown";
-  if (level >= 4) return "High energy";
-  if (level === 3) return "Okay energy";
-  return "Low energy";
-}
-
 export default function Dashboard() {
-  const { data: dashboard } = useDashboard();
-  const { user } = useAuth();
+  const {
+    dashboard,
+    user,
+    myProfile,
+    partnerProfile,
+    myCheckin,
+    partnerCheckin,
+    todaysEvents,
+    activeEmergency,
+  } = useDashboardLogic();
 
   if (!dashboard || !dashboard.couple) return null;
-
-  const myProfile = dashboard.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard.members.find(m => m.user_id !== user?.id)?.profiles;
-
-  const myCheckin = dashboard.myLatestCheckin;
-  const partnerCheckin = dashboard.partnerLatestCheckin;
-  const todaysEvents = dashboard.todaysEvents;
-  const activeEmergency = dashboard.activeEmergency;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

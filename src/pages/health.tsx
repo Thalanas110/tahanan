@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { useHealthNotes, useCreateHealthNote, useDeleteHealthNote } from "@/hooks/useHealthNotes";
-import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
+import { useHealthLogic } from "./logic/health";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,47 +7,29 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Loader2, Stethoscope, Eye, EyeOff, Trash2 } from "lucide-react";
 
 export default function Health() {
-  const { data: notes, isLoading } = useHealthNotes();
-  const createNote = useCreateHealthNote();
-  const deleteNote = useDeleteHealthNote();
-  const { user } = useAuth();
-  const { data: dashboard } = useDashboard();
-  
-  const [isAdding, setIsAdding] = useState(false);
-  const [type, setType] = useState("");
-  const [severity, setSeverity] = useState([5]);
-  const [details, setDetails] = useState("");
-  const [visible, setVisible] = useState(false);
-
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!dashboard?.couple?.id) return;
-
-    try {
-      await createNote.mutateAsync({
-        couple_id: dashboard.couple.id,
-        health_type: type.trim() || undefined,
-        severity: severity[0],
-        notes: details.trim() || undefined,
-        visible_to_partner: visible,
-      });
-      toast.success("Health log added");
-      setIsAdding(false);
-      setType("");
-      setSeverity([5]);
-      setDetails("");
-      setVisible(false);
-    } catch (err) {
-      toast.error("Failed to add health log");
-    }
-  }
+  const {
+    notes,
+    isLoading,
+    createNote,
+    deleteNote,
+    user,
+    isAdding,
+    setIsAdding,
+    type,
+    setType,
+    severity,
+    setSeverity,
+    details,
+    setDetails,
+    visible,
+    setVisible,
+    myProfile,
+    partnerProfile,
+    handleSubmit,
+  } = useHealthLogic();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

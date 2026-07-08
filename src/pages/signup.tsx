@@ -1,33 +1,22 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
+import { useSignupLogic } from "./logic/signup";
+import { Link } from "wouter";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function Signup() {
-  const { signUp } = useAuth();
-  const [, setLocation] = useLocation();
-  const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await signUp(email, password, displayName);
-      setLocation("/onboarding");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to create account");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const {
+    displayName,
+    setDisplayName,
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    handleSubmit,
+  } = useSignupLogic();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
