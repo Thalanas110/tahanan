@@ -10,6 +10,7 @@ import {
   AlertTriangle,
   MoreHorizontal,
   X,
+  StickyNote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,7 @@ const PRIMARY_NAV = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/check-ins", label: "Check-ins", icon: Heart },
   // Center slot is SOS (see below)
-  { href: "/love-notes", label: "Notes", icon: Heart },
+  { href: "/love-notes", label: "Notes", icon: StickyNote },
 ] as const;
 
 const MORE_NAV = [
