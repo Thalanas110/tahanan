@@ -8,6 +8,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/useAuth';
 
 // Pages
+import Landing from "./pages/landing";
 import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Onboarding from "./pages/onboarding";
@@ -33,7 +34,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/">
+      <Route path="/" component={Landing} />
+
+      <Route path="/dashboard">
         <ProtectedRoute>
           <AppLayout>
             <Dashboard />

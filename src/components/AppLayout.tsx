@@ -14,7 +14,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   useEmergencyRealtime(dashboard?.couple?.id);
 
   const navItems = [
-    { href: "/", label: "Home", icon: Home },
+    { href: "/dashboard", label: "Home", icon: Home },
     { href: "/check-ins", label: "Check-ins", icon: Heart },
     { href: "/love-notes", label: "Love Notes", icon: Heart },
     { href: "/calendar", label: "Calendar", icon: Calendar },
