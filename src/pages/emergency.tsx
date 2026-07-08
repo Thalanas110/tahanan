@@ -30,6 +30,9 @@ export default function Emergency() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
+      {activeEvent?.status === "active" && (
+        <audio autoPlay loop src="/Military Alarm - Sound FX Copyright Free.mp3" />
+      )}
       <header className="space-y-2 text-center md:text-left">
         <h1 className="text-3xl font-serif font-bold text-destructive flex items-center justify-center md:justify-start gap-2">
           <AlertTriangle className="w-8 h-8" /> Emergency
