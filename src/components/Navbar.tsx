@@ -11,7 +11,9 @@ import {
   MoreHorizontal,
   X,
   StickyNote,
+  LogOut,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
@@ -32,6 +34,7 @@ const MORE_NAV = [
 // ─── Mobile bottom nav ────────────────────────────────────────────────────────
 function MobileNav({ location }: { location: string }) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const { signOut } = useAuth();
 
   const isMoreActive = MORE_NAV.some((n) => n.href === location);
 
@@ -90,6 +93,17 @@ function MobileNav({ location }: { location: string }) {
                 <span className="text-[11px] font-semibold">{item.label}</span>
               </Link>
             ))}
+            <button
+              type="button"
+              onClick={() => {
+                setMoreOpen(false);
+                signOut();
+              }}
+              className="flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl transition-colors min-w-[72px] text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-[11px] font-semibold">Sign Out</span>
+            </button>
           </div>
         </>
       )}
@@ -225,6 +239,7 @@ function MobileNav({ location }: { location: string }) {
 
 export function Navbar() {
   const [location] = useLocation();
+  const { signOut } = useAuth();
   const allNavItems = [...PRIMARY_NAV, ...MORE_NAV];
 
   return (
@@ -270,6 +285,14 @@ export function Navbar() {
             <AlertTriangle className="w-4 h-4" />
             SOS Emergency
           </Link>
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-semibold transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20 border-none cursor-pointer"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
         </div>
       </aside>
 

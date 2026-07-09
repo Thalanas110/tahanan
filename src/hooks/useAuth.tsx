@@ -23,6 +23,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<void>;
+  deactivateAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -84,8 +85,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function signIn(email: string, password: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    
+    // Reactivate account if it was deactivated
+    if (data.session?.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_deactivated')
+        .eq('id', data.session.user.id)
+        .single();
+        
+      if (profile?.is_deactivated) {
+        await supabase
+          .from('profiles')
+          .update({ is_deactivated: false })
+          .eq('id', data.session.user.id);
+      }
+    }
   }
 
   async function signOut() {
@@ -108,6 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await loadProfile(session.user.id);
   }
 
+  async function deactivateAccount() {
+    if (!session?.user) throw new Error("Not authenticated");
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_deactivated: true })
+      .eq('id', session.user.id);
+    if (error) throw error;
+    await signOut();
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -120,6 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         updateDisplayName,
+        deactivateAccount,
       }}
     >
       {children}

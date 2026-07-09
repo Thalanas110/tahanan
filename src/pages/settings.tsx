@@ -2,13 +2,13 @@ import { useSettingsLogic } from "./logic/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { LogOut, HeartHandshake, User as UserIcon, Edit2, Check, X } from "lucide-react";
+import { HeartHandshake, User as UserIcon, Edit2, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import { AccountActionsDialogs } from "@/components/AccountActionsDialogs";
 
 export default function Settings() {
   const {
     profile,
-    signOut,
     couple,
     partnerProfile,
     isEditingName,
@@ -159,10 +159,7 @@ export default function Settings() {
           <CardTitle className="text-destructive">Account Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" className="w-full sm:w-auto" onClick={() => signOut()}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Sign Out
-          </Button>
+          <AccountActionsDialogs />
         </CardContent>
       </Card>
     </div>
