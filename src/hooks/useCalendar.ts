@@ -23,11 +23,11 @@ export function useCalendarEvents() {
 
 export function useUpcomingMilestone() {
   const { data: events } = useCalendarEvents();
-  
+
   return useMemo(() => {
     if (!events) return null;
     const now = startOfDay(new Date());
-    
+
     const milestoneEvents = events.filter(e => {
       const title = e.title.toLowerCase();
       return title.includes('anniversary') || title.includes('monthsary');
@@ -41,12 +41,12 @@ export function useUpcomingMilestone() {
       .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
     if (upcoming.length === 0) return null;
-    
+
     const nextEvent = upcoming[0];
     const eventDate = startOfDay(new Date(nextEvent.start_time));
     const daysLeft = differenceInDays(eventDate, now);
     const isAnniversary = nextEvent.title.toLowerCase().includes('anniversary');
-    
+
     return {
       event: nextEvent,
       daysLeft,
