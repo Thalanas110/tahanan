@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
-import { Loader2, Heart, HeartOff, Trash2, PenLine, Gift, MailOpen } from "lucide-react";
+import { Loader2, Heart, HeartOff, Trash2, PenLine, Gift, MailOpen, Pencil } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
@@ -27,9 +27,11 @@ export default function LoveNotes() {
     createNote,
     toggleFavorite,
     deleteNote,
+    updateNote,
     user,
     isWriting,
     setIsWriting,
+    editingId,
     title,
     setTitle,
     body,
@@ -38,6 +40,7 @@ export default function LoveNotes() {
     setOpenWhen,
     partnerName,
     handleSubmit,
+    handleEdit,
     sortedNotes,
   } = useLoveNotesLogic();
 
@@ -94,9 +97,9 @@ export default function LoveNotes() {
                 <Button type="button" variant="ghost" onClick={() => setIsWriting(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={createNote.isPending}>
-                  {createNote.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Leave Note
+                <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground" disabled={createNote.isPending || updateNote?.isPending}>
+                  {(createNote.isPending || updateNote?.isPending) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {editingId ? "Update Note" : "Leave Note"}
                 </Button>
               </div>
             </form>
@@ -145,33 +148,46 @@ export default function LoveNotes() {
                       <Heart className={`w-4 h-4 ${note.is_favorite ? 'fill-current' : ''}`} />
                     </Button>
                     {isMine && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Note</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this note? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNote.mutate(note.id);
-                            }}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-muted-foreground hover:text-accent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEdit(note);
+                          }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Note</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this note? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNote.mutate(note.id);
+                              }}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
                     )}
                   </div>
                 </CardHeader>

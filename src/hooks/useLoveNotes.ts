@@ -62,6 +62,23 @@ export function useToggleFavoriteLoveNote() {
   });
 }
 
+export function useUpdateLoveNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<LoveNote> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('love_notes')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as LoveNote;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: loveNotesQueryKey }),
+  });
+}
+
 export function useDeleteLoveNote() {
   const queryClient = useQueryClient();
   return useMutation({

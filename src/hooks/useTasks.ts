@@ -63,6 +63,23 @@ export function useUpdateTaskStatus() {
   });
 }
 
+export function useUpdateTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Task> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('tasks')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as Task;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: tasksQueryKey }),
+  });
+}
+
 export function useDeleteTask() {
   const queryClient = useQueryClient();
   return useMutation({

@@ -18,7 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
-import { Loader2, Stethoscope, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Loader2, Stethoscope, Eye, EyeOff, Trash2, Pencil } from "lucide-react";
 
 export default function Health() {
   const {
@@ -26,9 +26,11 @@ export default function Health() {
     isLoading,
     createNote,
     deleteNote,
+    updateNote,
     user,
     isAdding,
     setIsAdding,
+    editingId,
     type,
     setType,
     severity,
@@ -40,6 +42,7 @@ export default function Health() {
     myProfile,
     partnerProfile,
     handleSubmit,
+    handleEdit,
   } = useHealthLogic();
 
   return (
@@ -114,9 +117,9 @@ export default function Health() {
                   <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground" disabled={createNote.isPending}>
-                    {createNote.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Save
+                  <Button type="submit" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground" disabled={createNote.isPending || updateNote?.isPending}>
+                    {(createNote.isPending || updateNote?.isPending) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {editingId ? "Update" : "Save"}
                   </Button>
                 </div>
               </div>
@@ -158,25 +161,30 @@ export default function Health() {
                       {format(new Date(note.created_at), "MMM d, yyyy")}
                     </span>
                     {isMine && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
-                            <Trash2 className="w-3 h-3" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Health Log</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this log? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteNote.mutate(note.id)}>Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <div className="flex gap-1 items-center">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(note)} className="h-6 w-6 text-muted-foreground hover:text-primary">
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-destructive">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Health Log</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete this log? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteNote.mutate(note.id)}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -50,3 +50,23 @@ export function useCreateCheckin() {
     },
   });
 }
+
+export function useUpdateCheckin() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<DailyCheckin> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('daily_checkins')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as DailyCheckin;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: checkinsQueryKey });
+      queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
+    },
+  });
+}

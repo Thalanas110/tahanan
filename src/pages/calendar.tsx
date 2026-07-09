@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, isSameDay } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Trash2, Clock, MapPin } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Trash2, Clock, MapPin, Pencil } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   AlertDialog,
@@ -257,10 +257,12 @@ export default function CalendarPage() {
     events,
     isLoading,
     createEvent,
+    updateEvent,
     deleteEvent,
     dashboard,
     isAdding,
     setIsAdding,
+    editingId,
     title,
     setTitle,
     date,
@@ -272,6 +274,7 @@ export default function CalendarPage() {
     myProfile,
     partnerProfile,
     handleSubmit,
+    handleEdit,
     groupedEvents,
     sortedDays,
   } = useCalendarLogic();
@@ -330,8 +333,8 @@ export default function CalendarPage() {
                 <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createEvent.isPending}>
-                  Save Event
+                <Button type="submit" disabled={createEvent.isPending || updateEvent?.isPending}>
+                  {editingId ? "Update Event" : "Save Event"}
                 </Button>
               </div>
             </form>
@@ -380,25 +383,30 @@ export default function CalendarPage() {
                                 )}
                               </div>
                             </div>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Event</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete this event? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => deleteEvent.mutate(event.id)}>Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                            <div className="flex gap-1 items-center">
+                              <Button variant="ghost" size="icon" onClick={() => handleEdit(event)} className="text-muted-foreground hover:text-primary">
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Event</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete this event? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => deleteEvent.mutate(event.id)}>Delete</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>

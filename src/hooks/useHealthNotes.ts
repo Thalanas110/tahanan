@@ -44,6 +44,23 @@ export function useCreateHealthNote() {
   });
 }
 
+export function useUpdateHealthNote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<HealthNote> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('health_notes')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as HealthNote;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: healthNotesQueryKey }),
+  });
+}
+
 export function useDeleteHealthNote() {
   const queryClient = useQueryClient();
   return useMutation({

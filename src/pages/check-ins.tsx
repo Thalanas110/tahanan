@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { format } from "date-fns";
-import { Loader2, Lock, Unlock } from "lucide-react";
+import { Loader2, Lock, Unlock, Pencil } from "lucide-react";
 
 const MOODS = [
   { value: "great", label: "Great" },
@@ -22,6 +22,7 @@ export default function Checkins() {
     checkins,
     isLoading,
     createCheckin,
+    updateCheckin,
     user,
     myProfile,
     partnerProfile,
@@ -35,7 +36,9 @@ export default function Checkins() {
     setIsPrivate,
     isFormOpen,
     setIsFormOpen,
+    editingId,
     handleSubmit,
+    handleEdit,
   } = useCheckinsLogic();
 
   return (
@@ -123,9 +126,9 @@ export default function Checkins() {
                   <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={createCheckin.isPending}>
-                    {createCheckin.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Save Check-in
+                  <Button type="submit" disabled={createCheckin.isPending || updateCheckin?.isPending}>
+                    {(createCheckin.isPending || updateCheckin?.isPending) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {editingId ? "Update Check-in" : "Save Check-in"}
                   </Button>
                 </div>
               </div>
@@ -158,9 +161,16 @@ export default function Checkins() {
                     <span className="font-medium text-sm">
                       {isMine ? "You" : name}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(checkin.created_at), "MMM d, h:mm a")}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(checkin.created_at), "MMM d, h:mm a")}
+                      </span>
+                      {isMine && (
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(checkin)} className="h-6 w-6 text-muted-foreground hover:text-primary">
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <CardContent className="p-4 flex flex-col gap-3">
                     <div className="flex gap-4 items-center">

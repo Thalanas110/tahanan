@@ -2,8 +2,10 @@ import { useSettingsLogic } from "./logic/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HeartHandshake, User as UserIcon, Edit2, Check, X, BookOpen } from "lucide-react";
+import { useState } from "react";
+import { HeartHandshake, User as UserIcon, Edit2, Check, X, BookOpen, Copy, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import { AccountActionsDialogs } from "@/components/AccountActionsDialogs";
 import { useTutorial } from "@/components/Tutorial";
 import { useLocation } from "wouter";
@@ -26,6 +28,15 @@ export default function Settings() {
     isSavingProfileName,
     handleSaveProfileName,
   } = useSettingsLogic();
+
+  const [isCodeVisible, setIsCodeVisible] = useState(false);
+
+  const handleCopyCode = () => {
+    if (couple?.invite_code) {
+      navigator.clipboard.writeText(couple.invite_code);
+      toast.success("Invite code copied to clipboard!");
+    }
+  };
 
   const { start: startTutorial } = useTutorial();
   const [, navigate] = useLocation();
@@ -146,10 +157,26 @@ export default function Settings() {
 
             <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
               <p className="text-sm font-medium text-muted-foreground">Invite Code</p>
-              <div className="flex items-center gap-4">
-                <code className="text-xl font-bold tracking-widest text-primary bg-background px-3 py-1 rounded">
-                  {couple.invite_code}
+              <div className="flex items-center gap-2 mt-2">
+                <code className="text-xl font-bold tracking-widest text-primary bg-background px-3 py-1 rounded w-32 text-center">
+                  {isCodeVisible ? couple.invite_code : "••••••"}
                 </code>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsCodeVisible(!isCodeVisible)}
+                  title={isCodeVisible ? "Hide code" : "Show code"}
+                >
+                  {isCodeVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={handleCopyCode}
+                  title="Copy code"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
               </div>
               <p className="text-xs text-muted-foreground">
                 If someone else needs to join (though spaces are for two), they can use this code.

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useHealthNotes, useCreateHealthNote, useDeleteHealthNote } from "@/hooks/useHealthNotes";
+import { useHealthNotes, useCreateHealthNote, useDeleteHealthNote, useUpdateHealthNote } from "@/hooks/useHealthNotes";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
@@ -7,15 +7,35 @@ import { toast } from "sonner";
 export function useHealthLogic() {
   const { data: notes, isLoading } = useHealthNotes();
   const createNote = useCreateHealthNote();
+  const updateNote = useUpdateHealthNote();
   const deleteNote = useDeleteHealthNote();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
   
   const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [type, setType] = useState("");
   const [severity, setSeverity] = useState([5]);
   const [details, setDetails] = useState("");
   const [visible, setVisible] = useState(false);
+
+  const resetForm = () => {
+    setIsAdding(false);
+    setEditingId(null);
+    setType("");
+    setSeverity([5]);
+    setDetails("");
+    setVisible(false);
+  };
+
+  function handleEdit(note: any) {
+    setEditingId(note.id);
+    setType(note.health_type || "");
+    setSeverity([note.severity || 5]);
+    setDetails(note.notes || "");
+    setVisible(note.visible_to_partner || false);
+    setIsAdding(true);
+  }
 
   const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
   const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
@@ -25,21 +45,28 @@ export function useHealthLogic() {
     if (!dashboard?.couple?.id) return;
 
     try {
-      await createNote.mutateAsync({
-        couple_id: dashboard.couple.id,
-        health_type: type.trim() || undefined,
-        severity: severity[0],
-        notes: details.trim() || undefined,
-        visible_to_partner: visible,
-      });
-      toast.success("Health log added");
-      setIsAdding(false);
-      setType("");
-      setSeverity([5]);
-      setDetails("");
-      setVisible(false);
+      if (editingId) {
+        await updateNote.mutateAsync({
+          id: editingId,
+          health_type: type.trim() || undefined,
+          severity: severity[0],
+          notes: details.trim() || undefined,
+          visible_to_partner: visible,
+        });
+        toast.success("Health log updated");
+      } else {
+        await createNote.mutateAsync({
+          couple_id: dashboard.couple.id,
+          health_type: type.trim() || undefined,
+          severity: severity[0],
+          notes: details.trim() || undefined,
+          visible_to_partner: visible,
+        });
+        toast.success("Health log added");
+      }
+      resetForm();
     } catch (err) {
-      toast.error("Failed to add health log");
+      toast.error(editingId ? "Failed to update health log" : "Failed to add health log");
     }
   }
 
@@ -47,11 +74,16 @@ export function useHealthLogic() {
     notes,
     isLoading,
     createNote,
+    updateNote,
     deleteNote,
     user,
     dashboard,
     isAdding,
-    setIsAdding,
+    setIsAdding: (val: boolean) => {
+      if (!val) resetForm();
+      else setIsAdding(true);
+    },
+    editingId,
     type,
     setType,
     severity,
@@ -63,5 +95,6 @@ export function useHealthLogic() {
     myProfile,
     partnerProfile,
     handleSubmit,
+    handleEdit,
   };
 }

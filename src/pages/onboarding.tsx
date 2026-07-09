@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, HeartHandshake } from "lucide-react";
+import { Loader2, HeartHandshake, Copy, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 export default function Onboarding() {
   const {
@@ -20,6 +22,15 @@ export default function Onboarding() {
     setLocation,
   } = useOnboardingLogic();
 
+  const [isCodeVisible, setIsCodeVisible] = useState(false);
+
+  const handleCopyCode = () => {
+    if (createdInviteCode) {
+      navigator.clipboard.writeText(createdInviteCode);
+      toast.success("Invite code copied to clipboard!");
+    }
+  };
+
   if (createdInviteCode) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
@@ -34,10 +45,34 @@ export default function Onboarding() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-5xl font-mono tracking-widest text-primary font-bold my-8 bg-muted py-6 rounded-xl border border-border">
-              {createdInviteCode}
+            <div className="flex flex-col items-center justify-center my-8">
+              <div className="flex items-center gap-2 bg-muted p-4 rounded-xl border border-border w-full max-w-[280px]">
+                <code className="text-4xl font-mono tracking-widest text-primary font-bold text-center flex-1">
+                  {isCodeVisible ? createdInviteCode : "••••••"}
+                </code>
+                <div className="flex flex-col gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => setIsCodeVisible(!isCodeVisible)}
+                    title={isCodeVisible ? "Hide code" : "Show code"}
+                    className="h-8 w-8"
+                  >
+                    {isCodeVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={handleCopyCode}
+                    title="Copy code"
+                    className="h-8 w-8"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground mb-8">
+            <p className="text-sm text-muted-foreground mb-8 text-center">
               They can enter this code when they sign up to join your shared space.
             </p>
             <Button onClick={() => setLocation("/dashboard")} className="w-full" size="lg">

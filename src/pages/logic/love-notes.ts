@@ -1,21 +1,39 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
-import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote } from "@/hooks/useLoveNotes";
+import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote, useUpdateLoveNote } from "@/hooks/useLoveNotes";
 import { toast } from "sonner";
 
 export function useLoveNotesLogic() {
   const { data: notes, isLoading } = useLoveNotes();
   const createNote = useCreateLoveNote();
+  const updateNote = useUpdateLoveNote();
   const toggleFavorite = useToggleFavoriteLoveNote();
   const deleteNote = useDeleteLoveNote();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
   
   const [isWriting, setIsWriting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [openWhen, setOpenWhen] = useState("");
+
+  const resetForm = () => {
+    setIsWriting(false);
+    setEditingId(null);
+    setTitle("");
+    setBody("");
+    setOpenWhen("");
+  };
+
+  function handleEdit(note: any) {
+    setEditingId(note.id);
+    setTitle(note.title || "");
+    setBody(note.body || "");
+    setOpenWhen(note.open_when || "");
+    setIsWriting(true);
+  }
 
   const partnerId = dashboard?.members.find(m => m.user_id !== user?.id)?.user_id;
   const partnerName = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles?.display_name || "Partner";
@@ -25,20 +43,27 @@ export function useLoveNotesLogic() {
     if (!body.trim() || !dashboard?.couple?.id) return;
 
     try {
-      await createNote.mutateAsync({
-        couple_id: dashboard.couple.id,
-        recipient_id: partnerId,
-        title: title.trim() || undefined,
-        body: body.trim(),
-        open_when: openWhen.trim() || undefined,
-      });
-      toast.success("Note sent");
-      setIsWriting(false);
-      setTitle("");
-      setBody("");
-      setOpenWhen("");
+      if (editingId) {
+        await updateNote.mutateAsync({
+          id: editingId,
+          title: title.trim() || undefined,
+          body: body.trim(),
+          open_when: openWhen.trim() || undefined,
+        });
+        toast.success("Note updated");
+      } else {
+        await createNote.mutateAsync({
+          couple_id: dashboard.couple.id,
+          recipient_id: partnerId,
+          title: title.trim() || undefined,
+          body: body.trim(),
+          open_when: openWhen.trim() || undefined,
+        });
+        toast.success("Note sent");
+      }
+      resetForm();
     } catch (err) {
-      toast.error("Failed to send note");
+      toast.error(editingId ? "Failed to update note" : "Failed to send note");
     }
   }
 
@@ -52,11 +77,16 @@ export function useLoveNotesLogic() {
   return {
     isLoading,
     createNote,
+    updateNote,
     toggleFavorite,
     deleteNote,
     user,
     isWriting,
-    setIsWriting,
+    setIsWriting: (val: boolean) => {
+      if (!val) resetForm();
+      else setIsWriting(true);
+    },
+    editingId,
     title,
     setTitle,
     body,
@@ -65,6 +95,7 @@ export function useLoveNotesLogic() {
     setOpenWhen,
     partnerName,
     handleSubmit,
+    handleEdit,
     sortedNotes,
   };
 }

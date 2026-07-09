@@ -5,16 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
-import { Loader2, CheckSquare, Clock, Plus, Trash2, CheckCircle2, Circle } from "lucide-react";
+import { Loader2, CheckSquare, Clock, Plus, Trash2, CheckCircle2, Circle, Pencil } from "lucide-react";
 
 export default function Tasks() {
   const {
     isLoading,
     createTask,
+    updateTask,
     deleteTask,
     dashboard,
     isAdding,
     setIsAdding,
+    editingId,
     title,
     setTitle,
     assignee,
@@ -24,6 +26,7 @@ export default function Tasks() {
     myProfile,
     partnerProfile,
     handleSubmit,
+    handleEdit,
     handleToggleStatus,
     pendingTasks,
     completedTasks,
@@ -49,8 +52,8 @@ export default function Tasks() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>What needs to be done?</Label>
-                <Input 
-                  placeholder="e.g., Buy groceries, Call landlord" 
+                <Input
+                  placeholder="e.g., Buy groceries, Call landlord"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -88,9 +91,9 @@ export default function Tasks() {
                 <Button type="button" variant="ghost" onClick={() => setIsAdding(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createTask.isPending}>
-                  {createTask.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                  Save Task
+                <Button type="submit" disabled={createTask.isPending || updateTask?.isPending}>
+                  {(createTask.isPending || updateTask?.isPending) && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {editingId ? "Update Task" : "Save Task"}
                 </Button>
               </div>
             </form>
@@ -111,10 +114,11 @@ export default function Tasks() {
             ) : (
               <ul className="space-y-2">
                 {pendingTasks.map(task => (
-                  <TaskItem 
-                    key={task.id} 
-                    task={task} 
-                    onToggle={() => handleToggleStatus(task)} 
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={() => handleToggleStatus(task)}
+                    onEdit={() => handleEdit(task)}
                     onDelete={() => deleteTask.mutate(task.id)}
                     members={dashboard?.members}
                   />
@@ -130,10 +134,11 @@ export default function Tasks() {
               </h2>
               <ul className="space-y-2">
                 {completedTasks.map(task => (
-                  <TaskItem 
-                    key={task.id} 
-                    task={task} 
-                    onToggle={() => handleToggleStatus(task)} 
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={() => handleToggleStatus(task)}
+                    onEdit={() => handleEdit(task)}
                     onDelete={() => deleteTask.mutate(task.id)}
                     members={dashboard?.members}
                   />
@@ -147,14 +152,14 @@ export default function Tasks() {
   );
 }
 
-function TaskItem({ task, onToggle, onDelete, members }: { task: any, onToggle: () => void, onDelete: () => void, members: any }) {
+function TaskItem({ task, onToggle, onEdit, onDelete, members }: { task: any, onToggle: () => void, onEdit: () => void, onDelete: () => void, members: any }) {
   const isDone = task.status === "done";
   const assigneeName = members?.find((m: any) => m.user_id === task.assigned_to)?.profiles?.display_name;
 
   return (
     <Card className={`transition-colors ${isDone ? 'bg-muted/50' : 'bg-card'}`}>
       <CardContent className="p-3 flex items-center gap-3">
-        <button 
+        <button
           onClick={onToggle}
           className="flex-shrink-0 text-muted-foreground hover:text-primary transition-colors focus:outline-none"
         >
@@ -177,9 +182,14 @@ function TaskItem({ task, onToggle, onDelete, members }: { task: any, onToggle: 
             </div>
           )}
         </div>
-        <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive flex-shrink-0">
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-1 flex-shrink-0">
+          <Button variant="ghost" size="icon" onClick={onEdit} className="text-muted-foreground hover:text-primary">
+            <Pencil className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={onDelete} className="text-muted-foreground hover:text-destructive">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
