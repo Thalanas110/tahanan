@@ -14,6 +14,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useUpcomingMilestone } from "@/hooks/useCalendar";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -271,6 +273,7 @@ export function Navbar() {
   const [location] = useLocation();
   const { signOut } = useAuth();
   const allNavItems = [...PRIMARY_NAV, ...MORE_NAV];
+  const upcomingMilestone = useUpcomingMilestone();
 
   return (
     <>
@@ -301,6 +304,21 @@ export function Navbar() {
             </Link>
           ))}
         </nav>
+
+        {upcomingMilestone && (
+          <div className="px-4 py-2 mt-auto">
+            <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 text-center relative overflow-hidden shadow-sm">
+              <Heart className="absolute -right-3 -top-3 w-16 h-16 text-accent/10" />
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 relative z-10">Upcoming {upcomingMilestone.type}</p>
+              <div className="text-2xl font-serif font-bold text-accent mb-0.5 relative z-10">
+                {upcomingMilestone.daysLeft === 0 ? "Today!" : `${upcomingMilestone.daysLeft} ${upcomingMilestone.daysLeft === 1 ? 'day' : 'days'}`}
+              </div>
+              <p className="text-xs font-medium text-foreground/80 relative z-10">
+                {upcomingMilestone.daysLeft === 0 ? `Happy ${upcomingMilestone.type}!` : format(new Date(upcomingMilestone.event.start_time), "MMM do")}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 space-y-2">
           <Link

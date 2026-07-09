@@ -16,6 +16,7 @@ export default function Dashboard() {
     partnerCheckin,
     todaysEvents,
     activeEmergency,
+    upcomingAnniversary,
   } = useDashboardLogic();
 
   useTutorialAutoStart();
@@ -141,6 +142,27 @@ export default function Dashboard() {
 
         {/* Right Column: Events & Quick Actions */}
         <div className="space-y-6">
+          {upcomingAnniversary && (
+            <div data-tutorial-id="tutorial-countdown" className="space-y-4">
+              <Card className="border-accent/30 bg-accent/5 overflow-hidden relative shadow-sm">
+                <div className="absolute -right-6 -top-6 text-accent/10">
+                  <Heart className="w-32 h-32" />
+                </div>
+                <CardContent className="p-6 relative z-10 flex flex-col items-center justify-center text-center">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    Upcoming {upcomingAnniversary.type}
+                  </p>
+                  <div className="text-4xl font-serif font-bold text-accent mb-2">
+                    {upcomingAnniversary.daysLeft === 0 ? "Today!" : `${upcomingAnniversary.daysLeft} ${upcomingAnniversary.daysLeft === 1 ? 'day' : 'days'}`}
+                  </div>
+                  <p className="text-sm font-medium text-foreground">
+                    {upcomingAnniversary.daysLeft === 0 ? "Happy " + upcomingAnniversary.type + "!" : format(new Date(upcomingAnniversary.event.start_time), "MMMM do, yyyy")}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div data-tutorial-id="tutorial-schedule" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-serif font-semibold">Today's Schedule</h2>
