@@ -2,9 +2,11 @@ import { useSettingsLogic } from "./logic/settings";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { HeartHandshake, User as UserIcon, Edit2, Check, X } from "lucide-react";
+import { HeartHandshake, User as UserIcon, Edit2, Check, X, BookOpen } from "lucide-react";
 import { format } from "date-fns";
 import { AccountActionsDialogs } from "@/components/AccountActionsDialogs";
+import { useTutorial } from "@/components/Tutorial";
+import { useLocation } from "wouter";
 
 export default function Settings() {
   const {
@@ -24,6 +26,9 @@ export default function Settings() {
     isSavingProfileName,
     handleSaveProfileName,
   } = useSettingsLogic();
+
+  const { start: startTutorial } = useTutorial();
+  const [, navigate] = useLocation();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-2xl mx-auto">
@@ -153,6 +158,27 @@ export default function Settings() {
           </CardContent>
         </Card>
       )}
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-primary" />
+            <CardTitle>Help & Tutorial</CardTitle>
+          </div>
+          <CardDescription>New here, or just need a refresher?</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() => {
+              navigate("/dashboard");
+              setTimeout(startTutorial, 400);
+            }}
+          >
+            Restart App Tour
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card className="border-destructive/20">
         <CardHeader>

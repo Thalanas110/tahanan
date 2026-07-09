@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { format, isToday } from "date-fns";
 import { Heart, Calendar as CalendarIcon, AlertCircle, ArrowRight, Battery, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTutorialAutoStart } from "@/components/Tutorial";
 
 export default function Dashboard() {
   const {
@@ -17,11 +18,13 @@ export default function Dashboard() {
     activeEmergency,
   } = useDashboardLogic();
 
+  useTutorialAutoStart();
+
   if (!dashboard || !dashboard.couple) return null;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="space-y-2">
+      <header data-tutorial-id="tutorial-dashboard-header" className="space-y-2">
         <h1 className="text-3xl md:text-4xl font-serif font-bold text-foreground">
           Welcome home, {myProfile?.display_name}.
         </h1>
@@ -54,7 +57,7 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Check-ins Overview */}
-        <div className="space-y-4">
+        <div data-tutorial-id="tutorial-checkins" className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-serif font-semibold">Today's Check-ins</h2>
             <Link href="/check-ins" className="text-sm font-medium text-primary hover:underline flex items-center gap-1">
@@ -138,7 +141,7 @@ export default function Dashboard() {
 
         {/* Right Column: Events & Quick Actions */}
         <div className="space-y-6">
-          <div className="space-y-4">
+          <div data-tutorial-id="tutorial-schedule" className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-serif font-semibold">Today's Schedule</h2>
               <Link href="/calendar" className="text-sm font-medium text-primary hover:underline">
@@ -171,7 +174,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div data-tutorial-id="tutorial-quicklinks" className="grid grid-cols-2 gap-4">
             <Link href="/love-notes">
               <Card className="hover-elevate cursor-pointer transition-all border-border hover:border-primary/50 h-full">
                 <CardContent className="p-4 flex flex-col items-center justify-center text-center gap-2 h-full">

@@ -6,6 +6,89 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, isSameDay } from "date-fns";
 import { Calendar as CalendarIcon, Plus, Trash2, Clock, MapPin } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { Calendar } from "@/components/ui/calendar";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
+import { useState } from "react";
+
+interface DatePickerProps {
+  date: string;
+  setDate: (date: string) => void;
+}
+
+function DatePicker({ date, setDate }: DatePickerProps) {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const getLocalDate = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    const [year, month, day] = dateStr.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const formattedDate = date ? format(getLocalDate(date), "PPP") : "Select date";
+
+  const triggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      className={cn(
+        "w-full justify-start text-left font-normal h-9 border-input bg-transparent px-3 py-1 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
+        !date && "text-muted-foreground"
+      )}
+    >
+      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+      {formattedDate}
+    </Button>
+  );
+
+  const calendarComponent = (
+    <Calendar
+      mode="single"
+      selected={date ? getLocalDate(date) : undefined}
+      onSelect={(newDate) => {
+        if (newDate) {
+          setDate(format(newDate, "yyyy-MM-dd"));
+          setIsOpen(false);
+        }
+      }}
+      initialFocus
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>
+          {triggerButton}
+        </DrawerTrigger>
+        <DrawerContent className="border-border bg-background pb-6">
+          <div className="mx-auto w-full max-w-sm flex flex-col items-center">
+            <div className="w-full text-center py-4 border-b border-border/50">
+              <h3 className="font-serif font-bold text-lg text-foreground">Select Date</h3>
+            </div>
+            <div className="p-4 w-full flex justify-center">
+              {calendarComponent}
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        {triggerButton}
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 border-border bg-popover shadow-md" align="start">
+        {calendarComponent}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function CalendarPage() {
   const {
@@ -61,12 +144,7 @@ export default function CalendarPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Date</Label>
-                  <Input 
-                    type="date" 
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                  />
+                  <DatePicker date={date} setDate={setDate} />
                 </div>
                 <div className="space-y-2">
                   <Label>Time</Label>

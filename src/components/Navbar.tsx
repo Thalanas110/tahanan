@@ -15,6 +15,17 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // ─── Nav data ─────────────────────────────────────────────────────────────────
 const PRIMARY_NAV = [
@@ -62,19 +73,21 @@ function MobileNav({ location }: { location: string }) {
             style={{
               position: "fixed",
               bottom: "72px",
-              left: "50%",
-              transform: "translateX(-50%)",
+              left: "auto",
+              right: "12px",
+              transform: "none",
               zIndex: 49,
               background: "hsl(40 33% 98%)",
               border: "1px solid hsl(24 15% 87%)",
               borderRadius: "20px",
               padding: "8px",
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              display: "flex",
+              flexDirection: "column",
               gap: "4px",
               boxShadow: "0 8px 32px rgba(60,30,10,0.18), 0 2px 8px rgba(60,30,10,0.08)",
-              animation: "sheetUp 0.2s cubic-bezier(0.34,1.56,0.64,1) both",
-              minWidth: "200px",
+              animation: "sheetUpRight 0.2s cubic-bezier(0.34,1.56,0.64,1) both",
+              transformOrigin: "bottom right",
+              minWidth: "140px",
             }}
           >
             {MORE_NAV.map((item) => (
@@ -83,38 +96,54 @@ function MobileNav({ location }: { location: string }) {
                 href={item.href}
                 onClick={() => setMoreOpen(false)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl transition-colors min-w-[72px]",
+                  "flex items-center justify-between gap-2 px-4 py-3.5 rounded-xl transition-colors w-full",
                   location === item.href
                     ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                 )}
               >
+                <span className="text-sm font-medium">{item.label}</span>
                 <item.icon className="w-5 h-5" />
-                <span className="text-[11px] font-semibold">{item.label}</span>
               </Link>
             ))}
-            <button
-              type="button"
-              onClick={() => {
-                setMoreOpen(false);
-                signOut();
-              }}
-              className="flex flex-col items-center justify-center gap-1 px-4 py-3 rounded-xl transition-colors min-w-[72px] text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer"
-            >
-              <LogOut className="w-5 h-5" />
-              <span className="text-[11px] font-semibold">Sign Out</span>
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center justify-between gap-2 px-4 py-3.5 rounded-xl transition-colors w-full text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer"
+                >
+                  <span className="text-sm font-medium">Sign Out</span>
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sign Out</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to sign out?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setMoreOpen(false)}>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => { setMoreOpen(false); signOut(); }}>Sign Out</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </>
       )}
 
       {/* Bottom bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl pb-safe z-50">
+      <nav data-tutorial-id="tutorial-navbar" className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl pb-safe z-50">
         {/* keyframe injected once */}
         <style>{`
           @keyframes sheetUp {
             from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.95); }
             to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+          }
+          @keyframes sheetUpRight {
+            from { opacity: 0; transform: translateY(12px) scale(0.95); }
+            to   { opacity: 1; transform: translateY(0)     scale(1);    }
           }
         `}</style>
 
@@ -145,6 +174,7 @@ function MobileNav({ location }: { location: string }) {
           <Link
             href="/emergency"
             aria-label="SOS Emergency"
+            data-tutorial-id="tutorial-sos"
             style={{
               position: "relative",
               top: "-14px",
@@ -285,14 +315,29 @@ export function Navbar() {
             <AlertTriangle className="w-4 h-4" />
             SOS Emergency
           </Link>
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-semibold transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20 border-none cursor-pointer"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg text-sm font-semibold transition-colors bg-destructive/10 text-destructive hover:bg-destructive/20 border-none cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sign Out</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to sign out?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => signOut()}>Sign Out</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </aside>
 

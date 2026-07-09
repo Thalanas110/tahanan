@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AuthProvider } from '@/hooks/useAuth';
 import { Toaster as SonnerToaster } from 'sonner';
+import { TutorialProvider } from '@/components/Tutorial';
 
 // Pages
 import Landing from "./pages/landing";
@@ -112,14 +113,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <GlobalAppLogic />
-        <TooltipProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
-            <Router />
-          </WouterRouter>
-          <Toaster />
-          <SonnerToaster position="top-center" richColors />
-        </TooltipProvider>
+        <TutorialProvider>
+          <GlobalAppLogic />
+          <TooltipProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+              <Router />
+            </WouterRouter>
+            <Toaster />
+            <SonnerToaster position="top-center" richColors />
+          </TooltipProvider>
+        </TutorialProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
