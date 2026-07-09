@@ -67,6 +67,7 @@ function DatePicker({ date, setDate }: DatePickerProps) {
         }
       }}
       initialFocus
+      className={!isMobile ? "rounded-md border border-border/50 bg-background/50 shadow-sm" : undefined}
     />
   );
 
@@ -96,7 +97,12 @@ function DatePicker({ date, setDate }: DatePickerProps) {
         {triggerButton}
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 border-border bg-popover shadow-md" align="start">
-        {calendarComponent}
+        <div className="flex items-start justify-center p-4">
+          <div className="flex flex-col items-center">
+            <span className="text-[10px] text-muted-foreground mb-2 font-bold uppercase tracking-wider">Date</span>
+            {calendarComponent}
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );
