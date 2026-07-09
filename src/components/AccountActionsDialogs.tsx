@@ -1,77 +1,23 @@
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/lib/supabase";
-import { exportUserData, downloadAsJSON, downloadAsPDF } from "@/lib/exportData";
 import { AlertTriangle, Download } from "lucide-react";
+import { useAccountActionsLogic } from "./logic/AccountActionsDialogs";
 
 export function AccountActionsDialogs() {
-  const { deactivateAccount, signOut } = useAuth();
-  
-  const [resetOpen, setResetOpen] = useState(false);
-  const [newPassword, setNewPassword] = useState("");
-  const [isResetting, setIsResetting] = useState(false);
-  const [resetMessage, setResetMessage] = useState("");
-
-  const [deactivateOpen, setDeactivateOpen] = useState(false);
-  const [isDeactivating, setIsDeactivating] = useState(false);
-
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setResetMessage("Password must be at least 6 characters.");
-      return;
-    }
-    setIsResetting(true);
-    setResetMessage("");
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setIsResetting(false);
-    
-    if (error) {
-      setResetMessage(error.message);
-    } else {
-      setResetMessage("Password updated successfully!");
-      setTimeout(() => {
-        setResetOpen(false);
-        setNewPassword("");
-        setResetMessage("");
-      }, 2000);
-    }
-  };
-
-  const handleDeactivate = async () => {
-    setIsDeactivating(true);
-    try {
-      await deactivateAccount();
-    } catch (err) {
-      console.error(err);
-      setIsDeactivating(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      // 1. Export Data
-      const data = await exportUserData();
-      downloadAsJSON(data);
-      downloadAsPDF(data);
-      
-      // 2. Delete Account via RPC
-      const { error } = await supabase.rpc('delete_user');
-      if (error) throw error;
-      
-      // 3. Sign out
-      await signOut();
-    } catch (err) {
-      console.error(err);
-      setIsDeleting(false);
-    }
-  };
+  const {
+    resetOpen, setResetOpen,
+    newPassword, setNewPassword,
+    isResetting,
+    resetMessage,
+    deactivateOpen, setDeactivateOpen,
+    isDeactivating,
+    deleteOpen, setDeleteOpen,
+    isDeleting,
+    handleResetPassword,
+    handleDeactivate,
+    handleDelete
+  } = useAccountActionsLogic();
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row">

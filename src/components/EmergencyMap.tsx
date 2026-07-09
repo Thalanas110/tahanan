@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { getRoutingPathAStar, Point } from "@/lib/aStarRouting";
+import { useEmergencyMapLogic } from "./logic/EmergencyMap";
 
 // Fix missing marker icons in react-leaflet
 import icon from "leaflet/dist/images/marker-icon.png";
@@ -31,25 +30,12 @@ interface EmergencyMapProps {
 }
 
 export function EmergencyMap({ triggerLat, triggerLon, responderLat, responderLon }: EmergencyMapProps) {
-  const [path, setPath] = useState<Point[]>([]);
-
-  useEffect(() => {
-    if (responderLat && responderLon) {
-      const start = { lat: responderLat, lon: responderLon };
-      const end = { lat: triggerLat, lon: triggerLon };
-      
-      getRoutingPathAStar(start, end).then((computedPath) => {
-        setPath(computedPath);
-      });
-    }
-  }, [triggerLat, triggerLon, responderLat, responderLon]);
-
-  const center: [number, number] = responderLat && responderLon 
-    ? [(triggerLat + responderLat) / 2, (triggerLon + responderLon) / 2]
-    : [triggerLat, triggerLon];
-
-  // Adjust zoom based on distance, but keep it simple with a default
-  const defaultZoom = responderLat ? 13 : 15;
+  const { path, center, defaultZoom } = useEmergencyMapLogic({
+    triggerLat,
+    triggerLon,
+    responderLat,
+    responderLon,
+  });
 
   return (
     <div className="w-full h-64 md:h-96 rounded-xl overflow-hidden border-2 border-border shadow-inner z-0 relative">

@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link } from "wouter";
 import {
   Home,
   Calendar,
@@ -13,10 +12,9 @@ import {
   StickyNote,
   LogOut,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { useUpcomingMilestone } from "@/hooks/useCalendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNavbarLogic, useMobileNavLogic } from "./logic/Navbar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -46,8 +44,7 @@ const MORE_NAV = [
 
 // ─── Mobile bottom nav ────────────────────────────────────────────────────────
 function MobileNav({ location }: { location: string }) {
-  const [moreOpen, setMoreOpen] = useState(false);
-  const { signOut } = useAuth();
+  const { moreOpen, setMoreOpen, signOut } = useMobileNavLogic(location);
 
   const isMoreActive = MORE_NAV.some((n) => n.href === location);
 
@@ -270,10 +267,8 @@ function MobileNav({ location }: { location: string }) {
 }
 
 export function Navbar() {
-  const [location] = useLocation();
-  const { signOut } = useAuth();
+  const { location, signOut, upcomingMilestone } = useNavbarLogic();
   const allNavItems = [...PRIMARY_NAV, ...MORE_NAV];
-  const upcomingMilestone = useUpcomingMilestone();
 
   return (
     <>

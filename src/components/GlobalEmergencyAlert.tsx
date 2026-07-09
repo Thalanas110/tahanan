@@ -1,39 +1,16 @@
-import { useEffect, useRef, useState } from "react";
-import { useEmergencyEvents, useAcknowledgeSos } from "@/hooks/useEmergency";
-import { useAuth } from "@/hooks/useAuth";
 import { AlertTriangle, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLocation } from "wouter";
+import { useGlobalEmergencyAlertLogic } from "./logic/GlobalEmergencyAlert";
 
 export function GlobalEmergencyAlert() {
-  const { data: events } = useEmergencyEvents();
-  const { user, loading: authLoading } = useAuth();
-  const [, setLocation] = useLocation();
-  const acknowledgeSos = useAcknowledgeSos();
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [dismissedAcks, setDismissedAcks] = useState<Set<string>>(new Set());
-
-  // An active event is one that is 'active' and NOT triggered by the current user
-  const partnerActiveEvent = !authLoading && user ? events?.find(
-    (e) => e.status === "active" && e.triggered_by !== user.id
-  ) : undefined;
-
-  // An acknowledged event triggered by the current user
-  const myAcknowledgedEvent = !authLoading && user ? events?.find(
-    (e) => e.status === "acknowledged" && e.triggered_by === user.id && !dismissedAcks.has(e.id)
-  ) : undefined;
-
-  // Handle playing audio
-  useEffect(() => {
-    if (partnerActiveEvent && audioRef.current) {
-      audioRef.current.play().catch((err) => {
-        console.warn("Autoplay prevented:", err);
-      });
-    } else if (!partnerActiveEvent && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-  }, [partnerActiveEvent]);
+  const {
+    partnerActiveEvent,
+    myAcknowledgedEvent,
+    acknowledgeSos,
+    setLocation,
+    audioRef,
+    setDismissedAcks,
+  } = useGlobalEmergencyAlertLogic();
 
   if (!partnerActiveEvent && !myAcknowledgedEvent) {
     // Keep audio element mounted but hidden so we can reuse it

@@ -1,13 +1,19 @@
 import { ReactNode } from "react";
-import { Redirect, useLocation } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
+import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
+import { useProtectedRouteLogic } from "./logic/ProtectedRoute";
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
-  const { session, loading: authLoading } = useAuth();
-  const { data: dashboard, isLoading: dashboardLoading, isError, error, refetch } = useDashboard(!!session);
-  const [location] = useLocation();
+  const {
+    session,
+    authLoading,
+    dashboardLoading,
+    isError,
+    error,
+    refetch,
+    location,
+    isUncoupled,
+  } = useProtectedRouteLogic();
 
   if (authLoading) {
     return (
@@ -51,8 +57,6 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
       </div>
     );
   }
-
-  const isUncoupled = !dashboard?.couple;
 
   if (isUncoupled && location !== "/onboarding") {
     return <Redirect to="/onboarding" />;
