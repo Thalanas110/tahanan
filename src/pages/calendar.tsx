@@ -47,12 +47,12 @@ function DatePicker({ date, setDate }: DatePickerProps) {
       type="button"
       variant="outline"
       className={cn(
-        "w-full justify-start text-left font-normal h-9 border-input bg-transparent px-3 py-1 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
+        "w-full justify-start text-left font-normal h-auto min-h-9 border-input bg-transparent px-3 py-2 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
         !date && "text-muted-foreground"
       )}
     >
-      <CalendarIcon className="mr-2 h-4 w-4 text-muted-foreground" />
-      {formattedDate}
+      <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className="truncate">{formattedDate}</span>
     </Button>
   );
 
@@ -114,11 +114,11 @@ function TimePicker({ time, setTime }: TimePickerProps) {
   const [h24Str, mStr] = (time || "12:00").split(":");
   let h24 = parseInt(h24Str, 10);
   if (isNaN(h24)) h24 = 12;
-  
+
   const ampm = h24 >= 12 ? "PM" : "AM";
   let h12 = h24 % 12;
   if (h12 === 0) h12 = 12;
-  
+
   const currentHourStr = h12.toString().padStart(2, "0");
   const currentMinuteStr = mStr || "00";
 
@@ -136,12 +136,12 @@ function TimePicker({ time, setTime }: TimePickerProps) {
       type="button"
       variant="outline"
       className={cn(
-        "w-full justify-start text-left font-normal h-9 border-input bg-transparent px-3 py-1 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
+        "w-full justify-start text-left font-normal h-auto min-h-9 border-input bg-transparent px-3 py-2 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
         !time && "text-muted-foreground"
       )}
     >
-      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
-      {formattedTime}
+      <Clock className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+      <span className="truncate">{formattedTime}</span>
     </Button>
   );
 
@@ -151,12 +151,12 @@ function TimePicker({ time, setTime }: TimePickerProps) {
         <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Hour</span>
         <ScrollArea className="h-48 w-16 rounded-md border border-border/50 bg-background/50">
           <div className="flex flex-col p-1 gap-1">
-            {Array.from({length: 12}).map((_, i) => {
+            {Array.from({ length: 12 }).map((_, i) => {
               const val = (i + 1).toString().padStart(2, "0");
               return (
-                <Button 
-                  key={val} 
-                  variant={currentHourStr === val ? "default" : "ghost"} 
+                <Button
+                  key={val}
+                  variant={currentHourStr === val ? "default" : "ghost"}
                   size="sm"
                   className={cn("w-full h-8", currentHourStr === val ? "" : "text-muted-foreground hover:text-foreground")}
                   onClick={() => handleTimeChange(val, currentMinuteStr, ampm)}
@@ -168,7 +168,7 @@ function TimePicker({ time, setTime }: TimePickerProps) {
           </div>
         </ScrollArea>
       </div>
-      
+
       <div className="flex flex-col items-center mt-7">
         <span className="text-lg font-bold text-muted-foreground/50">:</span>
       </div>
@@ -177,12 +177,12 @@ function TimePicker({ time, setTime }: TimePickerProps) {
         <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Minute</span>
         <ScrollArea className="h-48 w-16 rounded-md border border-border/50 bg-background/50">
           <div className="flex flex-col p-1 gap-1">
-            {Array.from({length: 12}).map((_, i) => {
+            {Array.from({ length: 12 }).map((_, i) => {
               const val = (i * 5).toString().padStart(2, "0");
               return (
-                <Button 
-                  key={val} 
-                  variant={currentMinuteStr === val ? "default" : "ghost"} 
+                <Button
+                  key={val}
+                  variant={currentMinuteStr === val ? "default" : "ghost"}
                   size="sm"
                   className={cn("w-full h-8", currentMinuteStr === val ? "" : "text-muted-foreground hover:text-foreground")}
                   onClick={() => handleTimeChange(currentHourStr, val, ampm)}
@@ -198,16 +198,16 @@ function TimePicker({ time, setTime }: TimePickerProps) {
       <div className="flex flex-col items-center ml-2">
         <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">AM/PM</span>
         <div className="flex flex-col gap-2 h-48 justify-center">
-          <Button 
-            variant={ampm === "AM" ? "default" : "outline"} 
+          <Button
+            variant={ampm === "AM" ? "default" : "outline"}
             size="sm"
             className={cn("w-14", ampm === "AM" ? "" : "text-muted-foreground")}
             onClick={() => handleTimeChange(currentHourStr, currentMinuteStr, "AM")}
           >
             AM
           </Button>
-          <Button 
-            variant={ampm === "PM" ? "default" : "outline"} 
+          <Button
+            variant={ampm === "PM" ? "default" : "outline"}
             size="sm"
             className={cn("w-14", ampm === "PM" ? "" : "text-muted-foreground")}
             onClick={() => handleTimeChange(currentHourStr, currentMinuteStr, "PM")}
@@ -232,7 +232,7 @@ function TimePicker({ time, setTime }: TimePickerProps) {
             </div>
             {timeComponent}
             <div className="w-full px-8 mt-2">
-               <Button className="w-full" onClick={() => setIsOpen(false)}>Done</Button>
+              <Button className="w-full" onClick={() => setIsOpen(false)}>Done</Button>
             </div>
           </div>
         </DrawerContent>
@@ -280,7 +280,7 @@ export default function CalendarPage() {
   } = useCalendarLogic();
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 max-w-3xl mx-auto w-full pb-12">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-serif font-bold text-foreground">Calendar</h1>
@@ -294,13 +294,13 @@ export default function CalendarPage() {
       </header>
 
       {isAdding && (
-        <Card className="border-border shadow-sm">
+        <Card className="border-border shadow-md animate-in fade-in slide-in-from-top-2 duration-300">
           <CardContent className="pt-6">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label>Event Title</Label>
-                <Input 
-                  placeholder="e.g., Dinner Date, Doctor Appt" 
+                <Input
+                  placeholder="e.g., Dinner Date, Doctor Appt"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   required
@@ -354,7 +354,7 @@ export default function CalendarPage() {
           {sortedDays.map(dayStr => {
             const dateObj = new Date(dayStr);
             const isTodayDate = isSameDay(dateObj, new Date());
-            
+
             return (
               <div key={dayStr} className="space-y-3">
                 <h2 className="text-lg font-serif font-bold text-primary border-b border-border/50 pb-2">
@@ -363,7 +363,7 @@ export default function CalendarPage() {
                 <div className="grid gap-3">
                   {groupedEvents[dayStr].map(event => {
                     const assigneeName = dashboard?.members.find(m => m.user_id === event.assigned_to)?.profiles?.display_name;
-                    
+
                     return (
                       <Card key={event.id} className={`overflow-hidden ${isTodayDate ? 'border-primary/30' : ''}`}>
                         <CardContent className="p-0 flex items-stretch">
