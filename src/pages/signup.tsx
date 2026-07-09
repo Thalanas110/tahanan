@@ -30,7 +30,12 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
+      <div className="w-full max-w-md mb-4">
+        <Link href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 w-fit">
+          &larr; Back to home
+        </Link>
+      </div>
       <Card className="w-full max-w-md shadow-xl border-border/50">
         <CardHeader className="text-center space-y-2">
           <CardTitle className="text-3xl font-serif text-primary">Tahanan</CardTitle>

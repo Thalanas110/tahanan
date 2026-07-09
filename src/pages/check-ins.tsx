@@ -107,7 +107,7 @@ export default function Checkins() {
                 />
               </div>
 
-              <div className="flex items-center justify-between border-t border-border pt-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between border-t border-border pt-4 gap-4">
                 <div className="flex items-center gap-3">
                   <Switch
                     id="private-mode"
@@ -119,7 +119,7 @@ export default function Checkins() {
                     Keep note private
                   </Label>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex justify-end gap-2 w-full sm:w-auto">
                   <Button type="button" variant="ghost" onClick={() => setIsFormOpen(false)}>
                     Cancel
                   </Button>
