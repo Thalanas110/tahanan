@@ -2,8 +2,7 @@
 
 **Tahanan** is a private everyday-life app for couples. It helps two partners stay connected, organized, safe, and emotionally supported through daily check-ins, shared reminders, love notes, health notes, tasks, and emergency alerts.
 
-The project is built as a mobile-first web app with PWA potential.
-
+Note: The project is built as a PWA and is inspired by Tandem (https://tandem.my/), but because Tandem lacked features that I wanted to see in such an app and contained features I didn't want to, I went ahead and engineered my own. Despite this, Tandem remains good and I can recommend it.
 ---
 
 ## Overview
