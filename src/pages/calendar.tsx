@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { Calendar } from "@/components/ui/calendar";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
@@ -90,6 +91,156 @@ function DatePicker({ date, setDate }: DatePickerProps) {
   );
 }
 
+interface TimePickerProps {
+  time: string;
+  setTime: (time: string) => void;
+}
+
+function TimePicker({ time, setTime }: TimePickerProps) {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [h24Str, mStr] = (time || "12:00").split(":");
+  let h24 = parseInt(h24Str, 10);
+  if (isNaN(h24)) h24 = 12;
+  
+  const ampm = h24 >= 12 ? "PM" : "AM";
+  let h12 = h24 % 12;
+  if (h12 === 0) h12 = 12;
+  
+  const currentHourStr = h12.toString().padStart(2, "0");
+  const currentMinuteStr = mStr || "00";
+
+  const formattedTime = `${currentHourStr}:${currentMinuteStr} ${ampm}`;
+
+  const handleTimeChange = (newHour: string, newMinute: string, newAmpm: string) => {
+    let h = parseInt(newHour, 10);
+    if (newAmpm === "PM" && h < 12) h += 12;
+    if (newAmpm === "AM" && h === 12) h = 0;
+    setTime(`${h.toString().padStart(2, "0")}:${newMinute}`);
+  };
+
+  const triggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      className={cn(
+        "w-full justify-start text-left font-normal h-9 border-input bg-transparent px-3 py-1 hover:bg-muted/20 active:bg-muted/30 focus-visible:ring-1 focus-visible:ring-ring shadow-sm",
+        !time && "text-muted-foreground"
+      )}
+    >
+      <Clock className="mr-2 h-4 w-4 text-muted-foreground" />
+      {formattedTime}
+    </Button>
+  );
+
+  const timeComponent = (
+    <div className="flex items-start justify-center gap-2 p-4">
+      <div className="flex flex-col items-center">
+        <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Hour</span>
+        <ScrollArea className="h-48 w-16 rounded-md border border-border/50 bg-background/50">
+          <div className="flex flex-col p-1 gap-1">
+            {Array.from({length: 12}).map((_, i) => {
+              const val = (i + 1).toString().padStart(2, "0");
+              return (
+                <Button 
+                  key={val} 
+                  variant={currentHourStr === val ? "default" : "ghost"} 
+                  size="sm"
+                  className={cn("w-full h-8", currentHourStr === val ? "" : "text-muted-foreground hover:text-foreground")}
+                  onClick={() => handleTimeChange(val, currentMinuteStr, ampm)}
+                >
+                  {val}
+                </Button>
+              )
+            })}
+          </div>
+        </ScrollArea>
+      </div>
+      
+      <div className="flex flex-col items-center mt-7">
+        <span className="text-lg font-bold text-muted-foreground/50">:</span>
+      </div>
+
+      <div className="flex flex-col items-center">
+        <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">Minute</span>
+        <ScrollArea className="h-48 w-16 rounded-md border border-border/50 bg-background/50">
+          <div className="flex flex-col p-1 gap-1">
+            {Array.from({length: 12}).map((_, i) => {
+              const val = (i * 5).toString().padStart(2, "0");
+              return (
+                <Button 
+                  key={val} 
+                  variant={currentMinuteStr === val ? "default" : "ghost"} 
+                  size="sm"
+                  className={cn("w-full h-8", currentMinuteStr === val ? "" : "text-muted-foreground hover:text-foreground")}
+                  onClick={() => handleTimeChange(currentHourStr, val, ampm)}
+                >
+                  {val}
+                </Button>
+              )
+            })}
+          </div>
+        </ScrollArea>
+      </div>
+
+      <div className="flex flex-col items-center ml-2">
+        <span className="text-[10px] text-muted-foreground mb-1 font-bold uppercase tracking-wider">AM/PM</span>
+        <div className="flex flex-col gap-2 h-48 justify-center">
+          <Button 
+            variant={ampm === "AM" ? "default" : "outline"} 
+            size="sm"
+            className={cn("w-14", ampm === "AM" ? "" : "text-muted-foreground")}
+            onClick={() => handleTimeChange(currentHourStr, currentMinuteStr, "AM")}
+          >
+            AM
+          </Button>
+          <Button 
+            variant={ampm === "PM" ? "default" : "outline"} 
+            size="sm"
+            className={cn("w-14", ampm === "PM" ? "" : "text-muted-foreground")}
+            onClick={() => handleTimeChange(currentHourStr, currentMinuteStr, "PM")}
+          >
+            PM
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>
+          {triggerButton}
+        </DrawerTrigger>
+        <DrawerContent className="border-border bg-background pb-6">
+          <div className="mx-auto w-full max-w-sm flex flex-col items-center">
+            <div className="w-full text-center py-4 border-b border-border/50">
+              <h3 className="font-serif font-bold text-lg text-foreground">Select Time</h3>
+            </div>
+            {timeComponent}
+            <div className="w-full px-8 mt-2">
+               <Button className="w-full" onClick={() => setIsOpen(false)}>Done</Button>
+            </div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        {triggerButton}
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0 border-border bg-popover shadow-md" align="start">
+        {timeComponent}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export default function CalendarPage() {
   const {
     events,
@@ -148,12 +299,7 @@ export default function CalendarPage() {
                 </div>
                 <div className="space-y-2">
                   <Label>Time</Label>
-                  <Input 
-                    type="time" 
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                    required
-                  />
+                  <TimePicker time={time} setTime={setTime} />
                 </div>
               </div>
               <div className="space-y-2">
