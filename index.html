@@ -3,7 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+  <!-- Capacitor: allow bridge, local assets, and external services -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' capacitor: ionic: gap: https: data: blob:;
+             script-src 'self' 'unsafe-inline' 'unsafe-eval' capacitor: ionic: gap:;
+             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+             font-src 'self' https://fonts.gstatic.com;
+             img-src 'self' data: blob: https: capacitor:;
+             connect-src 'self' https: wss: capacitor:;" />
   <title>Tahanan</title>
   <meta name="description" content="Tahanan" />
   <meta name="robots" content="index, follow" />

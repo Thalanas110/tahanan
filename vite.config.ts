@@ -5,7 +5,13 @@ import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const port = Number(process.env.PORT || '5173');
-const basePath = process.env.BASE_PATH || '/';
+// Use './' so Capacitor WebView can load assets from the local filesystem.
+// Vercel and most static hosts work fine with relative base paths.
+const basePath = process.env.BASE_PATH || './';
+// Detect Capacitor build mode — disables the PWA service worker which conflicts
+// with Capacitor's WebView local file loading.
+const isCapacitor = process.env.CAPACITOR === 'true';
+
 
 export default defineConfig({
   base: basePath,
@@ -13,6 +19,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
+      // Disable service worker in Capacitor builds — SW can't intercept
+      // the capacitor:// scheme and causes white screen / broken routing.
+      selfDestroying: isCapacitor,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'pwa-192x192.png', 'pwa-512x512.png'],
       manifest: {

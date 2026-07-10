@@ -8,6 +8,10 @@ out-tsc
 .expo
 .expo-shared
 
+# Capacitor native projects (generated — commit intentionally if needed)
+android
+ios
+
 # dependencies
 node_modules
 
