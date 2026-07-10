@@ -342,13 +342,13 @@ export default function Landing() {
           .landing-desktop-links { display: none !important; }
           .landing-mobile-menu-btn { display: flex !important; }
 
-          /* Mobile dropdown */
+          /* Mobile dropdown — positioned below nav (64px + status bar inset) */
           .landing-mobile-menu {
             display: flex;
             flex-direction: column;
             gap: 4px;
             position: fixed;
-            top: 64px;
+            top: calc(64px + env(safe-area-inset-top, 0px));
             left: 0;
             right: 0;
             background: hsl(40 33% 97%);
@@ -386,11 +386,17 @@ export default function Landing() {
           left: 0,
           right: 0,
           zIndex: 50,
-          padding: "0 clamp(16px, 4vw, 48px)",
-          height: "64px",
+          // paddingTop pushes the nav items below the Android status bar.
+          // The nav height is 64px of content; safe-area-inset-top adds the
+          // status bar height on top of that.
+          paddingTop: "env(safe-area-inset-top, 0px)",
+          paddingLeft: "clamp(16px, 4vw, 48px)",
+          paddingRight: "clamp(16px, 4vw, 48px)",
+          height: "calc(64px + env(safe-area-inset-top, 0px))",
           display: "flex",
-          alignItems: "center",
+          alignItems: "flex-end",
           justifyContent: "space-between",
+          paddingBottom: "0",
           transition: "background 0.3s, box-shadow 0.3s",
           background: scrolled || menuOpen ? "hsla(40, 33%, 96%, 0.95)" : "transparent",
           backdropFilter: scrolled || menuOpen ? "blur(12px)" : "none",
@@ -549,7 +555,11 @@ export default function Landing() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "100px clamp(16px, 4vw, 48px) 60px",
+          // Top padding = nav content height (64px) + status bar safe area
+          paddingTop: "calc(100px + env(safe-area-inset-top, 0px))",
+          paddingBottom: "60px",
+          paddingLeft: "clamp(16px, 4vw, 48px)",
+          paddingRight: "clamp(16px, 4vw, 48px)",
           maxWidth: "1200px",
           margin: "0 auto",
           gap: "48px",

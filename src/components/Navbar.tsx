@@ -71,7 +71,7 @@ function MobileNav({ location }: { location: string }) {
           <div
             style={{
               position: "fixed",
-              bottom: "72px",
+              bottom: "calc(72px + env(safe-area-inset-bottom, 0px))",
               left: "auto",
               right: "12px",
               transform: "none",
@@ -133,7 +133,15 @@ function MobileNav({ location }: { location: string }) {
       )}
 
       {/* Bottom bar */}
-      <nav data-tutorial-id="tutorial-navbar" className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl pb-safe z-50">
+      <nav
+        data-tutorial-id="tutorial-navbar"
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-xl z-50"
+        style={{
+          // Fill the background colour behind the Android gesture bar
+          // and push the nav items above it with the safe-area inset.
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
         {/* keyframe injected once */}
         <style>{`
           @keyframes sheetUp {

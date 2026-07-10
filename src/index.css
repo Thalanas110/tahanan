@@ -217,6 +217,27 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif tracking-tight;
   }
+
+  /* ── Android safe-area insets ──────────────────────────────────────────────
+     When the app renders edge-to-edge (behind the status bar and nav bar),
+     CSS env() variables hold the exact pixel heights of those system bars.
+     We push the root content down by the status-bar height and let each
+     component handle the bottom inset individually (the mobile navbar uses
+     pb-safe; the main scroll area uses pb-safe-bottom via the utility below).
+  ───────────────────────────────────────────────────────────────────────── */
+  :root {
+    --safe-area-inset-top: env(safe-area-inset-top, 0px);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-inset-left: env(safe-area-inset-left, 0px);
+    --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  }
+
+  #root {
+    /* Push all content below the status bar */
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
 }
 
 @layer utilities {
