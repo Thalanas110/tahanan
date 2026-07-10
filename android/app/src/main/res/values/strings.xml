@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tahanan</string>
+    <string name="title_activity_main">Tahanan</string>
+    <string name="package_name">com.tahanan.app</string>
+    <string name="custom_url_scheme">com.tahanan.app</string>
+</resources>

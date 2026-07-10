@@ -9,8 +9,11 @@ out-tsc
 .expo-shared
 
 # Capacitor native projects (generated — commit intentionally if needed)
-android
+# android is committed; ios is not set up yet
 ios
+# Android build output (generated — do not commit)
+android/app/build
+android/build
 
 # dependencies
 node_modules
