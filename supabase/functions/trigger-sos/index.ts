@@ -4,6 +4,7 @@
 // Supabase Realtime, AND sends an SOS email to the partner via Gmail SMTP.
 import { adminClient, corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
 import { sendSosEmail } from '../_shared/mailer.ts';
+import { sendFcmMessage } from '../_shared/fcm.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
 
     if (error) return errorResponse(error.message, 400);
 
-    // --- 3. Send email to partner (non-blocking — SOS is always created first) ---
+    // --- 3. Send email & push to partner (non-blocking) ---
     (async () => {
       try {
         const admin = adminClient();
@@ -62,28 +63,35 @@ Deno.serve(async (req) => {
 
         // Get partner auth record for their email
         const { data: { user: partnerUser } } = await admin.auth.admin.getUserById(partnerId);
-        if (!partnerUser?.email) return;
 
-        // Get display names from profiles
+        // Get display names and FCM token from profiles
         const { data: profiles } = await admin
           .from('profiles')
-          .select('id, display_name')
+          .select('id, display_name, fcm_token')
           .in('id', [user.id, partnerId]);
 
         const triggerName = profiles?.find((p) => p.id === user.id)?.display_name ?? 'Your partner';
-        const partnerName = profiles?.find((p) => p.id === partnerId)?.display_name ?? 'there';
+        const partnerProfile = profiles?.find((p) => p.id === partnerId);
+        const partnerName = partnerProfile?.display_name ?? 'there';
+        const partnerFcmToken = partnerProfile?.fcm_token;
 
-        await sendSosEmail({
-          partnerEmail: partnerUser.email,
-          partnerName,
-          triggerName,
-          message: message ?? null,
-          locationNote: locationNote ?? null,
-          triggeredAt: emergency.created_at,
-        });
-      } catch (emailErr) {
-        // Log but never block the response — in-app alert already worked.
-        console.error('[trigger-sos] Email send failed:', emailErr);
+        if (partnerUser?.email) {
+          await sendSosEmail({
+            partnerEmail: partnerUser.email,
+            partnerName,
+            triggerName,
+            message: message ?? null,
+            locationNote: locationNote ?? null,
+            triggeredAt: emergency.created_at,
+          });
+        }
+
+        if (partnerFcmToken) {
+            await sendFcmMessage(partnerFcmToken, { type: 'sos' });
+        }
+      } catch (err) {
+        // Log but never block the response
+        console.error('[trigger-sos] Background task failed:', err);
       }
     })();
 

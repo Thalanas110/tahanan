@@ -17,6 +17,7 @@ export interface Profile {
   display_name: string;
   username: string | null;
   avatar_url: string | null;
+  fcm_token: string | null;
   is_deactivated: boolean;
   created_at: string;
 }

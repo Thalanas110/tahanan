@@ -20,6 +20,31 @@ public class EmergencyAlarmPlugin extends Plugin {
     private MediaPlayer mediaPlayer;
     private int originalVolume = -1;
 
+    public static void triggerAlarmNatively(Context context) {
+        try {
+            AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+
+            int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
+
+            android.net.Uri alert = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM);
+            if (alert == null) {
+                alert = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
+            }
+            MediaPlayer player = new MediaPlayer();
+            player.setDataSource(context, alert);
+            player.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_ALARM)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build());
+            player.setLooping(true);
+            player.prepare();
+            player.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @PluginMethod
     public void startAlarm(PluginCall call) {
         Activity activity = getActivity();
@@ -48,30 +73,12 @@ public class EmergencyAlarmPlugin extends Plugin {
             if (originalVolume == -1) {
                 originalVolume = audioManager.getStreamVolume(AudioManager.STREAM_ALARM);
             }
-            int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
-            audioManager.setStreamVolume(AudioManager.STREAM_ALARM, maxVolume, 0);
+            
+            triggerAlarmNatively(context);
 
-            if (mediaPlayer == null) {
-                // Use default ALARM ringtone
-                android.net.Uri alert = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_ALARM);
-                if (alert == null) {
-                    alert = android.media.RingtoneManager.getDefaultUri(android.media.RingtoneManager.TYPE_RINGTONE);
-                }
-                mediaPlayer = new MediaPlayer();
-                mediaPlayer.setDataSource(context, alert);
-                mediaPlayer.setAudioAttributes(new AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build());
-                mediaPlayer.setLooping(true);
-                mediaPlayer.prepare();
-            }
-            if (!mediaPlayer.isPlaying()) {
-                mediaPlayer.start();
-            }
             call.resolve();
         } catch (Exception e) {
-            call.reject("Failed to start alarm");
+            call.reject("Failed to start alarm", e);
         }
     }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "819962899878",
+    "project_id": "tahanan-cf483",
+    "storage_bucket": "tahanan-cf483.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:819962899878:android:49fab1f43de02521f3b367",
+        "android_client_info": {
+          "package_name": "com.tahanan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEM4iFPnNP_MDvq-O96bZKG1Bn5QgxzJk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
