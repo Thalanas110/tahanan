@@ -2,15 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { LoveNote } from '@/types/database';
 
-export const loveNotesQueryKey = ['love-notes'] as const;
+export const loveNotesQueryKey = (coupleId: string | null) =>
+  ['love-notes', coupleId] as const;
 
-export function useLoveNotes() {
+export function useLoveNotes(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: loveNotesQueryKey,
+    queryKey: loveNotesQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('love_notes')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as LoveNote[];
@@ -41,7 +44,7 @@ export function useCreateLoveNote() {
       if (error) throw error;
       return data as LoveNote;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: loveNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['love-notes'] }),
   });
 }
 
@@ -58,7 +61,7 @@ export function useToggleFavoriteLoveNote() {
       if (error) throw error;
       return data as LoveNote;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: loveNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['love-notes'] }),
   });
 }
 
@@ -75,7 +78,7 @@ export function useUpdateLoveNote() {
       if (error) throw error;
       return data as LoveNote;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: loveNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['love-notes'] }),
   });
 }
 
@@ -86,6 +89,6 @@ export function useDeleteLoveNote() {
       const { error } = await supabase.from('love_notes').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: loveNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['love-notes'] }),
   });
 }

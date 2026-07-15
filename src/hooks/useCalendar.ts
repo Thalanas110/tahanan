@@ -5,15 +5,18 @@ import { supabase } from '@/lib/supabase';
 import { dashboardQueryKey } from '@/hooks/useCouple';
 import type { CalendarEvent } from '@/types/database';
 
-export const calendarQueryKey = ['calendar-events'] as const;
+export const calendarQueryKey = (coupleId: string | null) =>
+  ['calendar-events', coupleId] as const;
 
-export function useCalendarEvents() {
+export function useCalendarEvents(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: calendarQueryKey,
+    queryKey: calendarQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('start_time', { ascending: true });
       if (error) throw error;
       return data as CalendarEvent[];
@@ -21,8 +24,8 @@ export function useCalendarEvents() {
   });
 }
 
-export function useUpcomingMilestone() {
-  const { data: events } = useCalendarEvents();
+export function useUpcomingMilestone(coupleId: string | null | undefined) {
+  const { data: events } = useCalendarEvents(coupleId);
 
   return useMemo(() => {
     if (!events) return null;
@@ -81,7 +84,7 @@ export function useCreateEvent() {
       return data as CalendarEvent;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
     },
   });
@@ -101,7 +104,7 @@ export function useUpdateEvent() {
       return data as CalendarEvent;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: calendarQueryKey });
+      queryClient.invalidateQueries({ queryKey: ['calendar-events'] });
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
     },
   });
@@ -114,6 +117,6 @@ export function useDeleteEvent() {
       const { error } = await supabase.from('calendar_events').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: calendarQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['calendar-events'] }),
   });
 }

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { HeartHandshake, User as UserIcon, Edit2, Check, X, BookOpen, Copy, Eye, EyeOff } from "lucide-react";
+import { HeartHandshake, User as UserIcon, Edit2, Check, X, BookOpen, Copy, Eye, EyeOff, Users } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AccountActionsDialogs } from "@/components/AccountActionsDialogs";
@@ -27,13 +27,16 @@ export default function Settings() {
     setNewProfileName,
     isSavingProfileName,
     handleSaveProfileName,
+    cofCouple,
+    cofPartnerProfile,
   } = useSettingsLogic();
 
   const [isCodeVisible, setIsCodeVisible] = useState(false);
+  const [isCofCodeVisible, setIsCofCodeVisible] = useState(false);
 
-  const handleCopyCode = () => {
-    if (couple?.invite_code) {
-      navigator.clipboard.writeText(couple.invite_code);
+  const handleCopyCode = (code: string | undefined) => {
+    if (code) {
+      navigator.clipboard.writeText(code);
       toast.success("Invite code copied to clipboard!");
     }
   };
@@ -172,7 +175,7 @@ export default function Settings() {
                 <Button 
                   variant="outline" 
                   size="icon"
-                  onClick={handleCopyCode}
+                  onClick={() => handleCopyCode(couple.invite_code)}
                   title="Copy code"
                 >
                   <Copy className="w-4 h-4" />
@@ -182,6 +185,74 @@ export default function Settings() {
                 If someone else needs to join (though spaces are for two), they can use this code.
               </p>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {cofCouple ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-accent" />
+              <CardTitle>COF Space</CardTitle>
+            </div>
+            <CardDescription>Your Close/Couple of Friends space.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Space Name</p>
+              <div className="flex items-center gap-2">
+                <p className="text-lg">{cofCouple.name}</p>
+                {/* Note: editing COF name not implemented yet */}
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Friend</p>
+              <p className="text-lg">{cofPartnerProfile?.display_name || "Unknown"}</p>
+            </div>
+
+            <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
+              <p className="text-sm font-medium text-muted-foreground">Invite Code</p>
+              <div className="flex items-center gap-2 mt-2">
+                <code className="text-xl font-bold tracking-widest text-primary bg-background px-3 py-1 rounded w-32 text-center">
+                  {isCofCodeVisible ? cofCouple.invite_code : "••••••"}
+                </code>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsCofCodeVisible(!isCofCodeVisible)}
+                  title={isCofCodeVisible ? "Hide code" : "Show code"}
+                >
+                  {isCofCodeVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon"
+                  onClick={() => handleCopyCode(cofCouple.invite_code)}
+                  title="Copy code"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="border-dashed border-primary/30 bg-primary/5">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <CardTitle>Need a space for your best friend?</CardTitle>
+            </div>
+            <CardDescription>
+              Create a Close/Couple of Friends (COF) space. You can only have one at a time.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate("/onboarding")} className="w-full sm:w-auto">
+              Create or Join a COF Space
+            </Button>
           </CardContent>
         </Card>
       )}

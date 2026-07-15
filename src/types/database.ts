@@ -1,6 +1,8 @@
 // Hand-written types mirroring the Supabase Postgres schema
 // (see artifacts/tahanan/supabase/migrations). Keep in sync with the SQL.
 
+export type CoupleType = 'partner' | 'cof';
+
 export type CheckinMood =
   | 'great'
   | 'good'
@@ -28,6 +30,8 @@ export interface Couple {
   invite_code: string | null;
   created_by: string;
   created_at: string;
+  /** 'partner' = main bf/gf space; 'cof' = Close/Couple of Friends space */
+  type: CoupleType;
 }
 
 export interface CoupleMember {
@@ -35,6 +39,7 @@ export interface CoupleMember {
   couple_id: string;
   user_id: string;
   role: string;
+  couple_type: CoupleType;
   created_at: string;
 }
 

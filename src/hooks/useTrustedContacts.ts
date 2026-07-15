@@ -2,15 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { TrustedContact } from '@/types/database';
 
-export const trustedContactsQueryKey = ['trusted-contacts'] as const;
+export const trustedContactsQueryKey = (coupleId: string | null) =>
+  ['trusted-contacts', coupleId] as const;
 
-export function useTrustedContacts() {
+export function useTrustedContacts(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: trustedContactsQueryKey,
+    queryKey: trustedContactsQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('trusted_contacts')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as TrustedContact[];
@@ -41,7 +44,7 @@ export function useCreateTrustedContact() {
       if (error) throw error;
       return data as TrustedContact;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: trustedContactsQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trusted-contacts'] }),
   });
 }
 
@@ -52,6 +55,6 @@ export function useDeleteTrustedContact() {
       const { error } = await supabase.from('trusted_contacts').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: trustedContactsQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trusted-contacts'] }),
   });
 }

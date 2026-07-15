@@ -3,15 +3,18 @@ import { supabase } from '@/lib/supabase';
 import { dashboardQueryKey } from '@/hooks/useCouple';
 import type { DailyCheckin } from '@/types/database';
 
-export const checkinsQueryKey = ['checkins'] as const;
+export const checkinsQueryKey = (coupleId: string | null) =>
+  ['checkins', coupleId] as const;
 
-export function useCheckins() {
+export function useCheckins(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: checkinsQueryKey,
+    queryKey: checkinsQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('daily_checkins')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('created_at', { ascending: false })
         .limit(50);
       if (error) throw error;
@@ -44,8 +47,8 @@ export function useCreateCheckin() {
       if (error) throw error;
       return data as DailyCheckin;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: checkinsQueryKey });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: checkinsQueryKey(data.couple_id) });
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
     },
   });
@@ -65,7 +68,8 @@ export function useUpdateCheckin() {
       return data as DailyCheckin;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: checkinsQueryKey });
+      // Invalidate all checkin queries regardless of coupleId
+      queryClient.invalidateQueries({ queryKey: ['checkins'] });
       queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
     },
   });

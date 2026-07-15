@@ -20,6 +20,10 @@ export function useSettingsLogic() {
   const members = dashboard?.members || [];
   const partnerProfile = members.find(m => m.user_id !== profile?.id)?.profiles;
 
+  const cofCouple = dashboard?.cofCouple;
+  const cofMembers = dashboard?.cofMembers || [];
+  const cofPartnerProfile = cofMembers.find(m => m.user_id !== profile?.id)?.profiles;
+
   const handleSaveName = () => {
     if (couple && newName.trim() && newName.trim() !== couple.name) {
       updateCouple.mutate(
@@ -69,5 +73,7 @@ export function useSettingsLogic() {
     setNewProfileName,
     isSavingProfileName,
     handleSaveProfileName,
+    cofCouple,
+    cofPartnerProfile,
   };
 }

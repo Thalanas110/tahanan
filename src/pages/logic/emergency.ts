@@ -3,9 +3,11 @@ import { useEmergencyEvents, useTriggerSos, useAcknowledgeSos, useResolveSos } f
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useEmergencyLogic() {
-  const { data: events, isLoading } = useEmergencyEvents();
+  const { activeRoomId } = useActiveRoom();
+  const { data: events, isLoading } = useEmergencyEvents(activeRoomId);
   const triggerSos = useTriggerSos();
   const acknowledgeSos = useAcknowledgeSos();
   const resolveSos = useResolveSos();

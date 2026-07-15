@@ -22,6 +22,7 @@ import Tasks from "./pages/tasks";
 import Emergency from "./pages/emergency";
 import Health from "./pages/health";
 import CalendarPage from "./pages/calendar";
+import TrustedContacts from "./pages/trusted-contacts";
 
 const queryClient = new QueryClient();
 
@@ -98,6 +99,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Settings />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/trusted-contacts">
+        <ProtectedRoute>
+          <AppLayout>
+            <TrustedContacts />
           </AppLayout>
         </ProtectedRoute>
       </Route>

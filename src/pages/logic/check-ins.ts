@@ -3,13 +3,15 @@ import { useCheckins, useCreateCheckin, useUpdateCheckin } from "@/hooks/useChec
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { useDashboard } from "@/hooks/useCouple";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useCheckinsLogic() {
-  const { data: checkins, isLoading } = useCheckins();
+  const { data: checkins, isLoading } = useCheckins(useActiveRoom().activeRoomId);
   const createCheckin = useCreateCheckin();
   const updateCheckin = useUpdateCheckin();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { activeRoomId } = useActiveRoom();
   
   const [mood, setMood] = useState("");
   const [energy, setEnergy] = useState<number[]>([3]);
@@ -45,7 +47,7 @@ export function useCheckinsLogic() {
       toast.error("Please select a mood");
       return;
     }
-    if (!dashboard?.couple?.id) return;
+    if (!activeRoomId) return;
 
     try {
       if (editingId) {
@@ -59,7 +61,7 @@ export function useCheckinsLogic() {
         toast.success("Check-in updated");
       } else {
         await createCheckin.mutateAsync({
-          couple_id: dashboard.couple.id,
+          couple_id: activeRoomId!,
           mood,
           energy_level: energy[0],
           note: note.trim() || undefined,

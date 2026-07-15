@@ -2,15 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { HealthNote } from '@/types/database';
 
-export const healthNotesQueryKey = ['health-notes'] as const;
+export const healthNotesQueryKey = (coupleId: string | null) =>
+  ['health-notes', coupleId] as const;
 
-export function useHealthNotes() {
+export function useHealthNotes(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: healthNotesQueryKey,
+    queryKey: healthNotesQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('health_notes')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as HealthNote[];
@@ -40,7 +43,7 @@ export function useCreateHealthNote() {
       if (error) throw error;
       return data as HealthNote;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: healthNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['health-notes'] }),
   });
 }
 
@@ -57,7 +60,7 @@ export function useUpdateHealthNote() {
       if (error) throw error;
       return data as HealthNote;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: healthNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['health-notes'] }),
   });
 }
 
@@ -68,6 +71,6 @@ export function useDeleteHealthNote() {
       const { error } = await supabase.from('health_notes').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: healthNotesQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['health-notes'] }),
   });
 }

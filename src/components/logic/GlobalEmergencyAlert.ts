@@ -5,7 +5,9 @@ import { useLocation } from "wouter";
 import EmergencyAlarm from "@/lib/EmergencyAlarm";
 
 export function useGlobalEmergencyAlertLogic() {
-  const { data: events } = useEmergencyEvents();
+  // Global alert monitors ALL couple emergency events (both rooms).
+  // Pass null to bypass the coupleId filter and rely on RLS to scope results.
+  const { data: events } = useEmergencyEvents(null);
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const acknowledgeSos = useAcknowledgeSos();

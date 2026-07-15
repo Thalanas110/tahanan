@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useUpcomingMilestone } from "@/hooks/useCalendar";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useMobileNavLogic(location: string) {
   const [moreOpen, setMoreOpen] = useState(false);
@@ -13,7 +14,8 @@ export function useMobileNavLogic(location: string) {
 export function useNavbarLogic() {
   const [location] = useLocation();
   const { signOut } = useAuth();
-  const upcomingMilestone = useUpcomingMilestone();
+  const { activeRoomId } = useActiveRoom();
+  const upcomingMilestone = useUpcomingMilestone(activeRoomId);
 
   return { location, signOut, upcomingMilestone };
 }

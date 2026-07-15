@@ -1,9 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invokeEdgeFunction } from '@/lib/supabase';
-import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile } from '@/types/database';
+import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile, CoupleType } from '@/types/database';
 
 export interface DashboardSummary {
   couple: Couple | null;
+  /** The user's Close/Couple of Friends space, if one exists. */
+  cofCouple: Couple | null;
   members: { user_id: string; profiles: Profile }[];
   myLatestCheckin: DailyCheckin | null;
   partnerLatestCheckin: DailyCheckin | null;
@@ -24,8 +26,8 @@ export function useDashboard(enabled = true) {
 export function useCreateCouple() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) =>
-      invokeEdgeFunction<{ couple: Couple }>('create-couple', { name }),
+    mutationFn: ({ name, type = 'partner' }: { name: string; type?: CoupleType }) =>
+      invokeEdgeFunction<{ couple: Couple }>('create-couple', { name, type }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
   });
 }

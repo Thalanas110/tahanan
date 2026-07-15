@@ -4,9 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
 import type { TaskStatus } from "@/types/database";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useTasksLogic() {
-  const { data: tasks, isLoading } = useTasks();
+  const { activeRoomId } = useActiveRoom();
+  const { data: tasks, isLoading } = useTasks(activeRoomId);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const updateStatus = useUpdateTaskStatus();
@@ -41,7 +43,7 @@ export function useTasksLogic() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !dashboard?.couple?.id) return;
+    if (!title.trim() || !activeRoomId) return;
 
     try {
       if (editingId) {
@@ -54,7 +56,7 @@ export function useTasksLogic() {
         toast.success("Task updated");
       } else {
         await createTask.mutateAsync({
-          couple_id: dashboard.couple.id,
+          couple_id: activeRoomId!,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? undefined : assignee,
           priority: priority as "low" | "medium" | "high",

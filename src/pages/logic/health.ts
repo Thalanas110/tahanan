@@ -3,9 +3,11 @@ import { useHealthNotes, useCreateHealthNote, useDeleteHealthNote, useUpdateHeal
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useHealthLogic() {
-  const { data: notes, isLoading } = useHealthNotes();
+  const { activeRoomId } = useActiveRoom();
+  const { data: notes, isLoading } = useHealthNotes(activeRoomId);
   const createNote = useCreateHealthNote();
   const updateNote = useUpdateHealthNote();
   const deleteNote = useDeleteHealthNote();
@@ -42,7 +44,7 @@ export function useHealthLogic() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!dashboard?.couple?.id) return;
+    if (!activeRoomId) return;
 
     try {
       if (editingId) {
@@ -56,7 +58,7 @@ export function useHealthLogic() {
         toast.success("Health log updated");
       } else {
         await createNote.mutateAsync({
-          couple_id: dashboard.couple.id,
+          couple_id: activeRoomId!,
           health_type: type.trim() || undefined,
           severity: severity[0],
           notes: details.trim() || undefined,

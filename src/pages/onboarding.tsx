@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, HeartHandshake, Copy, Eye, EyeOff } from "lucide-react";
+import { Loader2, HeartHandshake, Copy, Eye, EyeOff, Users } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +20,8 @@ export default function Onboarding() {
     handleCreate,
     handleJoin,
     setLocation,
+    isCofMode,
+    hasCofCouple,
   } = useOnboardingLogic();
 
   const [isCodeVisible, setIsCodeVisible] = useState(false);
@@ -31,17 +33,25 @@ export default function Onboarding() {
     }
   };
 
+  // ── Invite-code success screen (same for both partner and COF) ──────────────
   if (createdInviteCode) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-muted/30 p-4">
         <Card className="w-full max-w-md shadow-xl border-primary/20 text-center py-8">
           <CardHeader>
             <div className="mx-auto bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
-              <HeartHandshake className="w-8 h-8 text-primary" />
+              {isCofMode
+                ? <Users className="w-8 h-8 text-primary" />
+                : <HeartHandshake className="w-8 h-8 text-primary" />
+              }
             </div>
-            <CardTitle className="text-2xl font-serif">Space Created</CardTitle>
+            <CardTitle className="text-2xl font-serif">
+              {isCofMode ? "COF Space Created" : "Space Created"}
+            </CardTitle>
             <CardDescription className="text-base mt-2">
-              Share this 6-character code with your partner to invite them to <b>{coupleName}</b>.
+              Share this 6-character code with your{" "}
+              {isCofMode ? "friend" : "partner"} to invite them to{" "}
+              <b>{coupleName}</b>.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -51,17 +61,17 @@ export default function Onboarding() {
                   {isCodeVisible ? createdInviteCode : "••••••"}
                 </code>
                 <div className="flex flex-col gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setIsCodeVisible(!isCodeVisible)}
                     title={isCodeVisible ? "Hide code" : "Show code"}
                     className="h-8 w-8"
                   >
                     {isCodeVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="icon"
                     onClick={handleCopyCode}
                     title="Copy code"
@@ -84,6 +94,90 @@ export default function Onboarding() {
     );
   }
 
+  // ── COF mode: user already has a partner couple ─────────────────────────────
+  if (isCofMode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <Card className="w-full max-w-md shadow-xl border-border/50">
+          <CardHeader className="text-center space-y-2">
+            <div className="mx-auto bg-primary/10 w-14 h-14 rounded-full flex items-center justify-center mb-2">
+              <Users className="w-7 h-7 text-primary" />
+            </div>
+            <CardTitle className="text-3xl font-serif text-primary">COF Room</CardTitle>
+            <CardDescription className="text-base">
+              Create a <b>Close/Couple of Friends</b> space or join one with a code.
+              You can only have one COF room — one best friend at a time! 🤝
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {hasCofCouple ? (
+              // Edge case: user somehow navigated here but already has both rooms.
+              <div className="text-center space-y-4 py-4">
+                <p className="text-muted-foreground text-sm">
+                  You already have a COF space. Head back home!
+                </p>
+                <Button onClick={() => setLocation("/dashboard")} className="w-full" size="lg">
+                  Go to our home
+                </Button>
+              </div>
+            ) : (
+              <Tabs defaultValue="create" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="create">Create COF Space</TabsTrigger>
+                  <TabsTrigger value="join">Join COF Space</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="create">
+                  <form onSubmit={handleCreate} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="coupleName">Name your COF space</Label>
+                      <Input
+                        id="coupleName"
+                        placeholder="e.g. Alex & Jamie's Friend Zone"
+                        value={coupleName}
+                        onChange={(e) => setCoupleName(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        You'll get an invite code to share with your close friend.
+                      </p>
+                    </div>
+                    <Button type="submit" className="w-full mt-2" disabled={createCouple.isPending}>
+                      {createCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Create COF Space
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="join">
+                  <form onSubmit={handleJoin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="inviteCode">Friend's Invite Code</Label>
+                      <Input
+                        id="inviteCode"
+                        placeholder="6-character code"
+                        className="font-mono text-center text-lg uppercase tracking-widest"
+                        maxLength={6}
+                        value={inviteCode}
+                        onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full mt-2" disabled={joinCouple.isPending}>
+                      {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Join COF Space
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Normal mode: user has no couple yet ────────────────────────────────────
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
       <Card className="w-full max-w-md shadow-xl border-border/50">
@@ -99,7 +193,7 @@ export default function Onboarding() {
               <TabsTrigger value="create">Create Space</TabsTrigger>
               <TabsTrigger value="join">Join Partner</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="create">
               <form onSubmit={handleCreate} className="space-y-4">
                 <div className="space-y-2">

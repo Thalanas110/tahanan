@@ -11,10 +11,12 @@ import {
   X,
   StickyNote,
   LogOut,
+  Users,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNavbarLogic, useMobileNavLogic } from "./logic/Navbar";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,14 +41,51 @@ const MORE_NAV = [
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/health", label: "Health", icon: Stethoscope },
+  { href: "/trusted-contacts", label: "Trusted Contacts", icon: Users, cofOnly: true },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
+
+// ─── Room switcher pill ───────────────────────────────────────────────────────
+function RoomSwitcher() {
+  const { activeRoomType, hasCof, switchRoom } = useActiveRoom();
+  if (!hasCof) return null;
+  return (
+    <div className="flex gap-1 p-1 bg-muted rounded-lg text-xs font-semibold">
+      <button
+        type="button"
+        onClick={() => switchRoom("partner")}
+        className={cn(
+          "flex-1 py-1.5 px-2 rounded-md transition-colors",
+          activeRoomType === "partner"
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        🏠 Partner
+      </button>
+      <button
+        type="button"
+        onClick={() => switchRoom("cof")}
+        className={cn(
+          "flex-1 py-1.5 px-2 rounded-md transition-colors",
+          activeRoomType === "cof"
+            ? "bg-background text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        👥 COF
+      </button>
+    </div>
+  );
+}
 
 // ─── Mobile bottom nav ────────────────────────────────────────────────────────
 function MobileNav({ location }: { location: string }) {
   const { moreOpen, setMoreOpen, signOut } = useMobileNavLogic(location);
+  const { hasCof, activeRoomType } = useActiveRoom();
 
-  const isMoreActive = MORE_NAV.some((n) => n.href === location);
+  const visibleMore = MORE_NAV.filter((n) => !('cofOnly' in n && n.cofOnly && !hasCof));
+  const isMoreActive = visibleMore.some((n) => n.href === location);
 
   return (
     <>
@@ -89,7 +128,11 @@ function MobileNav({ location }: { location: string }) {
               minWidth: "140px",
             }}
           >
-            {MORE_NAV.map((item) => (
+          {/* Room switcher */}
+            <div className="px-2 pb-2">
+              <RoomSwitcher />
+            </div>
+            {visibleMore.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
@@ -276,7 +319,9 @@ function MobileNav({ location }: { location: string }) {
 
 export function Navbar() {
   const { location, signOut, upcomingMilestone } = useNavbarLogic();
-  const allNavItems = [...PRIMARY_NAV, ...MORE_NAV];
+  const { hasCof } = useActiveRoom();
+  const visibleMore = MORE_NAV.filter((n) => !('cofOnly' in n && n.cofOnly && !hasCof));
+  const allNavItems = [...PRIMARY_NAV, ...visibleMore];
 
   return (
     <>
@@ -288,6 +333,11 @@ export function Navbar() {
             Tahanan
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Our shared space</p>
+        </div>
+
+        {/* Room switcher pill — only visible when user has a COF room */}
+        <div className="px-4 pb-2">
+          <RoomSwitcher />
         </div>
 
         <nav className="flex-1 px-4 space-y-1">

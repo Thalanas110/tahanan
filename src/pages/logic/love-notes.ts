@@ -3,9 +3,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote, useUpdateLoveNote } from "@/hooks/useLoveNotes";
 import { toast } from "sonner";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useLoveNotesLogic() {
-  const { data: notes, isLoading } = useLoveNotes();
+  const { activeRoomId } = useActiveRoom();
+  const { data: notes, isLoading } = useLoveNotes(activeRoomId);
   const createNote = useCreateLoveNote();
   const updateNote = useUpdateLoveNote();
   const toggleFavorite = useToggleFavoriteLoveNote();
@@ -40,7 +42,7 @@ export function useLoveNotesLogic() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!body.trim() || !dashboard?.couple?.id) return;
+    if (!body.trim() || !activeRoomId) return;
 
     try {
       if (editingId) {
@@ -53,7 +55,7 @@ export function useLoveNotesLogic() {
         toast.success("Note updated");
       } else {
         await createNote.mutateAsync({
-          couple_id: dashboard.couple.id,
+          couple_id: activeRoomId!,
           recipient_id: partnerId,
           title: title.trim() || undefined,
           body: body.trim(),

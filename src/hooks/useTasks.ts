@@ -2,15 +2,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Task, TaskStatus } from '@/types/database';
 
-export const tasksQueryKey = ['tasks'] as const;
+export const tasksQueryKey = (coupleId: string | null) =>
+  ['tasks', coupleId] as const;
 
-export function useTasks() {
+export function useTasks(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: tasksQueryKey,
+    queryKey: tasksQueryKey(coupleId ?? null),
+    enabled: !!coupleId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
+        .eq('couple_id', coupleId!)
         .order('due_date', { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data as Task[];
@@ -42,7 +45,7 @@ export function useCreateTask() {
       if (error) throw error;
       return data as Task;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tasksQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
 
@@ -59,7 +62,7 @@ export function useUpdateTaskStatus() {
       if (error) throw error;
       return data as Task;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tasksQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
 
@@ -76,7 +79,7 @@ export function useUpdateTask() {
       if (error) throw error;
       return data as Task;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tasksQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }
 
@@ -87,6 +90,6 @@ export function useDeleteTask() {
       const { error } = await supabase.from('tasks').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: tasksQueryKey }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 }

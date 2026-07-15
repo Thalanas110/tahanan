@@ -4,9 +4,11 @@ import { useDashboard } from "@/hooks/useCouple";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useCalendarLogic() {
-  const { data: events, isLoading } = useCalendarEvents();
+  const { activeRoomId } = useActiveRoom();
+  const { data: events, isLoading } = useCalendarEvents(activeRoomId);
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -43,7 +45,7 @@ export function useCalendarLogic() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !dashboard?.couple?.id) return;
+    if (!title.trim() || !activeRoomId) return;
 
     try {
       const startTime = new Date(`${date}T${time}`).toISOString();
@@ -57,7 +59,7 @@ export function useCalendarLogic() {
         toast.success("Event updated");
       } else {
         await createEvent.mutateAsync({
-          couple_id: dashboard.couple.id,
+          couple_id: activeRoomId!,
           title: title.trim(),
           start_time: startTime,
           assigned_to: assignee === "both" ? undefined : assignee,

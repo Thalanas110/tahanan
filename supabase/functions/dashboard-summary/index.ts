@@ -2,6 +2,10 @@
 // Aggregates everything the Home dashboard needs in one round trip: the
 // caller's couple, both partners' latest check-ins, today's events, and any
 // active emergency. All reads go through the user's own RLS-scoped client.
+//
+// When a user belongs to both a 'partner' and a 'cof' couple, the primary
+// `couple` returned is always the 'partner' one. The 'cof' couple is returned
+// separately as `cofCouple`.
 import { corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
 
 Deno.serve(async (req) => {
@@ -17,41 +21,49 @@ Deno.serve(async (req) => {
 
     if (!user) return errorResponse('Not authenticated', 401);
 
-    const { data: membership } = await supabase
+    // Fetch all couple memberships for the user (at most 2: one per type).
+    const { data: memberships } = await supabase
       .from('couple_members')
-      .select('couple_id, couples(id, name, invite_code)')
-      .eq('user_id', user.id)
-      .maybeSingle();
+      .select('couple_id, couple_type, couples(id, name, invite_code, type, created_by, created_at)')
+      .eq('user_id', user.id);
 
-    if (!membership) {
-      return jsonResponse({ couple: null });
+    if (!memberships || memberships.length === 0) {
+      return jsonResponse({ couple: null, cofCouple: null });
     }
 
-    const coupleId = membership.couple_id;
+    // Identify the partner couple (primary) and the COF couple (secondary).
+    const partnerMembership = memberships.find((m) => m.couple_type === 'partner');
+    const cofMembership = memberships.find((m) => m.couple_type === 'cof');
+
+    const primaryCoupleId = partnerMembership?.couple_id ?? cofMembership?.couple_id ?? null;
+
+    if (!primaryCoupleId) {
+      return jsonResponse({ couple: null, cofCouple: null });
+    }
 
     const [{ data: members }, { data: checkins }, { data: events }, { data: activeEmergency }] =
       await Promise.all([
         supabase
           .from('couple_members')
           .select('user_id, profiles(id, display_name, avatar_url)')
-          .eq('couple_id', coupleId),
+          .eq('couple_id', primaryCoupleId),
         supabase
           .from('daily_checkins')
           .select('*')
-          .eq('couple_id', coupleId)
+          .eq('couple_id', primaryCoupleId)
           .order('created_at', { ascending: false })
           .limit(20),
         supabase
           .from('calendar_events')
           .select('*')
-          .eq('couple_id', coupleId)
+          .eq('couple_id', primaryCoupleId)
           .gte('start_time', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
           .lt('start_time', new Date(new Date().setHours(23, 59, 59, 999)).toISOString())
           .order('start_time', { ascending: true }),
         supabase
           .from('emergency_events')
           .select('*')
-          .eq('couple_id', coupleId)
+          .eq('couple_id', primaryCoupleId)
           .neq('status', 'resolved')
           .order('created_at', { ascending: false })
           .limit(1)
@@ -66,7 +78,8 @@ Deno.serve(async (req) => {
     }
 
     return jsonResponse({
-      couple: membership.couples,
+      couple: partnerMembership?.couples ?? null,
+      cofCouple: cofMembership?.couples ?? null,
       members: members ?? [],
       myLatestCheckin: latestByUser.get(user.id) ?? null,
       partnerLatestCheckin:

@@ -6,15 +6,19 @@ import type { EmergencyEvent } from '@/types/database';
 
 export const emergencyQueryKey = ['emergency-events'] as const;
 
-export function useEmergencyEvents() {
+export function useEmergencyEvents(coupleId: string | null | undefined) {
   return useQuery({
-    queryKey: emergencyQueryKey,
+    queryKey: ['emergency-events', coupleId ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('emergency_events')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
+      if (coupleId) {
+        query = query.eq('couple_id', coupleId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data as EmergencyEvent[];
     },
