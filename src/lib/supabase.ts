@@ -11,6 +11,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+import { supabaseStorageAdapter } from './supabaseStorageAdapter';
+
 // Note: we intentionally do NOT pass a `Database` generic here. Every hook in
 // src/hooks casts query results to the hand-written types in
 // src/types/database.ts, which is simpler and more reliable than keeping a
@@ -20,6 +22,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    storage: supabaseStorageAdapter,
   },
 });
 

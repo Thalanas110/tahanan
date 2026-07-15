@@ -49,7 +49,7 @@ export function useTasksLogic() {
           id: editingId,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? null : assignee,
-          priority: priority,
+          priority: priority as "low" | "medium" | "high",
         });
         toast.success("Task updated");
       } else {
@@ -57,7 +57,7 @@ export function useTasksLogic() {
           couple_id: dashboard.couple.id,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? undefined : assignee,
-          priority: priority,
+          priority: priority as "low" | "medium" | "high",
         });
         toast.success("Task added");
       }
