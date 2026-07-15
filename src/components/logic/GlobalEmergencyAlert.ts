@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useEmergencyEvents, useAcknowledgeSos } from "@/hooks/useEmergency";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
+import EmergencyAlarm from "@/lib/EmergencyAlarm";
 
 export function useGlobalEmergencyAlertLogic() {
   const { data: events } = useEmergencyEvents();
@@ -23,13 +24,19 @@ export function useGlobalEmergencyAlertLogic() {
 
   // Handle playing audio
   useEffect(() => {
-    if (partnerActiveEvent && audioRef.current) {
-      audioRef.current.play().catch((err) => {
-        console.warn("Autoplay prevented:", err);
-      });
-    } else if (!partnerActiveEvent && audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (partnerActiveEvent) {
+      if (audioRef.current) {
+        audioRef.current.play().catch((err) => {
+          console.warn("Autoplay prevented:", err);
+        });
+      }
+      EmergencyAlarm.startAlarm().catch(console.error);
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      EmergencyAlarm.stopAlarm().catch(console.error);
     }
   }, [partnerActiveEvent]);
 

@@ -12,6 +12,8 @@ public class MainActivity extends BridgeActivity {
         // navigation bar. Safe-area insets are then exposed to CSS via
         // env(safe-area-inset-top/bottom/left/right).
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
+        registerPlugin(EmergencyAlarmPlugin.class);
     }
 }
 
