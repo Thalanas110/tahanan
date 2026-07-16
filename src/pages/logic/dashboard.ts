@@ -2,6 +2,11 @@ import { useDashboard } from "@/hooks/useCouple";
 import { useAuth } from "@/hooks/useAuth";
 import { useCalendarEvents, useUpcomingMilestone } from "@/hooks/useCalendar";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useCheckins } from "@/hooks/useCheckins";
+import { useEmergencyEvents } from "@/hooks/useEmergency";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
+import { pickActiveEmergency, pickLatestCheckins, pickTodaysEvents } from "@/lib/roomDashboard";
 
 export function getEnergyLabel(level: number | null) {
   if (!level) return "Unknown";
@@ -13,25 +18,30 @@ export function getEnergyLabel(level: number | null) {
 export function useDashboardLogic() {
   const { data: dashboard } = useDashboard();
   const { user } = useAuth();
-  const { activeRoomId } = useActiveRoom();
-  const { data: events } = useCalendarEvents(activeRoomId);
+  const { activeRoomId, activeRoomName, activeRoomType } = useActiveRoom();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
+  const { data: checkins = [] } = useCheckins(activeRoomId, activeRoomType);
+  const { data: events = [] } = useCalendarEvents(activeRoomId, activeRoomType);
+  const { data: emergencies = [] } = useEmergencyEvents(activeRoomId, activeRoomType);
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
-  const myCheckin = dashboard?.myLatestCheckin;
-  const partnerCheckin = dashboard?.partnerLatestCheckin;
-  const todaysEvents = dashboard?.todaysEvents || [];
-  const activeEmergency = dashboard?.activeEmergency;
-  const upcomingAnniversary = useUpcomingMilestone(activeRoomId);
+  const { myLatestCheckin, partnerLatestCheckin } = pickLatestCheckins(checkins, user?.id);
+  const todaysEvents = pickTodaysEvents(events);
+  const activeEmergency = pickActiveEmergency(emergencies);
+  const upcomingAnniversary = useUpcomingMilestone(activeRoomId, activeRoomType);
 
   return {
     dashboard,
+    activeRoomId,
+    activeRoomName,
+    activeRoomType,
     user,
     myProfile,
     partnerProfile,
-    myCheckin,
-    partnerCheckin,
+    myCheckin: myLatestCheckin,
+    partnerCheckin: partnerLatestCheckin,
     todaysEvents,
     activeEmergency,
     upcomingAnniversary,
