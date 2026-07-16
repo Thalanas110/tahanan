@@ -1,19 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { Task, TaskStatus } from '@/types/database';
+import type { Task, TaskStatus, CoupleType } from '@/types/database';
 
-export const tasksQueryKey = (coupleId: string | null) =>
-  ['tasks', coupleId] as const;
+export const tasksQueryKey = (roomId: string | null, roomType: CoupleType) =>
+  ['tasks', roomId, roomType] as const;
 
-export function useTasks(coupleId: string | null | undefined) {
+export function useTasks(roomId: string | null | undefined, roomType: CoupleType) {
   return useQuery({
-    queryKey: tasksQueryKey(coupleId ?? null),
-    enabled: !!coupleId,
+    queryKey: tasksQueryKey(roomId ?? null, roomType),
+    enabled: !!roomId,
     queryFn: async () => {
+      const idColumn = roomType === 'cof' ? 'cof_id' : 'couple_id';
       const { data, error } = await supabase
         .from('tasks')
         .select('*')
-        .eq('couple_id', coupleId!)
+        .eq(idColumn, roomId!)
         .order('due_date', { ascending: true, nullsFirst: false });
       if (error) throw error;
       return data as Task[];
@@ -22,7 +23,8 @@ export function useTasks(coupleId: string | null | undefined) {
 }
 
 export interface CreateTaskInput {
-  couple_id: string;
+  roomId: string;
+  roomType: CoupleType;
   title: string;
   description?: string;
   category?: string;
@@ -34,12 +36,17 @@ export interface CreateTaskInput {
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateTaskInput) => {
+    mutationFn: async ({ roomId, roomType, ...input }: CreateTaskInput) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('tasks')
-        .insert({ ...input, created_by: userData.user.id })
+        .insert({ 
+          ...input, 
+          couple_id: roomType === 'partner' ? roomId : null,
+          cof_id: roomType === 'cof' ? roomId : null,
+          created_by: userData.user.id 
+        })
         .select()
         .single();
       if (error) throw error;

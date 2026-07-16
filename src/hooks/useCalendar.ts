@@ -3,20 +3,21 @@ import { useMemo } from 'react';
 import { startOfDay, differenceInDays } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { dashboardQueryKey } from '@/hooks/useCouple';
-import type { CalendarEvent } from '@/types/database';
+import type { CalendarEvent, CoupleType } from '@/types/database';
 
-export const calendarQueryKey = (coupleId: string | null) =>
-  ['calendar-events', coupleId] as const;
+export const calendarQueryKey = (roomId: string | null, roomType: CoupleType) =>
+  ['calendar-events', roomId, roomType] as const;
 
-export function useCalendarEvents(coupleId: string | null | undefined) {
+export function useCalendarEvents(roomId: string | null | undefined, roomType: CoupleType) {
   return useQuery({
-    queryKey: calendarQueryKey(coupleId ?? null),
-    enabled: !!coupleId,
+    queryKey: calendarQueryKey(roomId ?? null, roomType),
+    enabled: !!roomId,
     queryFn: async () => {
+      const idColumn = roomType === 'cof' ? 'cof_id' : 'couple_id';
       const { data, error } = await supabase
         .from('calendar_events')
         .select('*')
-        .eq('couple_id', coupleId!)
+        .eq(idColumn, roomId!)
         .order('start_time', { ascending: true });
       if (error) throw error;
       return data as CalendarEvent[];
@@ -24,8 +25,8 @@ export function useCalendarEvents(coupleId: string | null | undefined) {
   });
 }
 
-export function useUpcomingMilestone(coupleId: string | null | undefined) {
-  const { data: events } = useCalendarEvents(coupleId);
+export function useUpcomingMilestone(roomId: string | null | undefined, roomType: CoupleType) {
+  const { data: events } = useCalendarEvents(roomId, roomType);
 
   return useMemo(() => {
     if (!events) return null;
@@ -59,7 +60,8 @@ export function useUpcomingMilestone(coupleId: string | null | undefined) {
 }
 
 export interface CreateEventInput {
-  couple_id: string;
+  roomId: string;
+  roomType: CoupleType;
   title: string;
   description?: string;
   event_type?: string;
@@ -72,12 +74,17 @@ export interface CreateEventInput {
 export function useCreateEvent() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateEventInput) => {
+    mutationFn: async ({ roomId, roomType, ...input }: CreateEventInput) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('calendar_events')
-        .insert({ ...input, created_by: userData.user.id })
+        .insert({ 
+          ...input, 
+          couple_id: roomType === 'partner' ? roomId : null,
+          cof_id: roomType === 'cof' ? roomId : null,
+          created_by: userData.user.id 
+        })
         .select()
         .single();
       if (error) throw error;

@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useHealthLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: notes, isLoading } = useHealthNotes(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: notes, isLoading } = useHealthNotes(activeRoomId, activeRoomType);
   const createNote = useCreateHealthNote();
   const updateNote = useUpdateHealthNote();
   const deleteNote = useDeleteHealthNote();
@@ -58,7 +58,8 @@ export function useHealthLogic() {
         toast.success("Health log updated");
       } else {
         await createNote.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           health_type: type.trim() || undefined,
           severity: severity[0],
           notes: details.trim() || undefined,

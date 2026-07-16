@@ -30,8 +30,6 @@ export interface Couple {
   invite_code: string | null;
   created_by: string;
   created_at: string;
-  /** 'partner' = main bf/gf space; 'cof' = Close/Couple of Friends space */
-  type: CoupleType;
 }
 
 export interface CoupleMember {
@@ -39,13 +37,29 @@ export interface CoupleMember {
   couple_id: string;
   user_id: string;
   role: string;
-  couple_type: CoupleType;
+  created_at: string;
+}
+
+export interface Cof {
+  id: string;
+  name: string;
+  invite_code: string | null;
+  created_by: string;
+  created_at: string;
+}
+
+export interface CofMember {
+  id: string;
+  cof_id: string;
+  user_id: string;
+  role: string;
   created_at: string;
 }
 
 export interface DailyCheckin {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   user_id: string;
   mood: string | null;
   energy_level: number | null;
@@ -58,7 +72,8 @@ export interface DailyCheckin {
 
 export interface CalendarEvent {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   created_by: string;
   assigned_to: string | null;
   title: string;
@@ -73,7 +88,8 @@ export interface CalendarEvent {
 
 export interface LoveNote {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   created_by: string;
   recipient_id: string | null;
   title: string | null;
@@ -86,7 +102,8 @@ export interface LoveNote {
 
 export interface HealthNote {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   user_id: string;
   health_type: string | null;
   severity: number | null;
@@ -97,7 +114,8 @@ export interface HealthNote {
 
 export interface Task {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   created_by: string;
   assigned_to: string | null;
   title: string;
@@ -111,7 +129,8 @@ export interface Task {
 
 export interface EmergencyEvent {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   triggered_by: string;
   status: EmergencyStatus;
   message: string | null;
@@ -125,7 +144,8 @@ export interface EmergencyEvent {
 
 export interface TrustedContact {
   id: string;
-  couple_id: string;
+  couple_id: string | null;
+  cof_id: string | null;
   created_by: string;
   name: string;
   relationship: string | null;

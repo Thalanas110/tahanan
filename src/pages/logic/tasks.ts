@@ -7,8 +7,8 @@ import type { TaskStatus } from "@/types/database";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useTasksLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: tasks, isLoading } = useTasks(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: tasks, isLoading } = useTasks(activeRoomId, activeRoomType);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const updateStatus = useUpdateTaskStatus();
@@ -56,7 +56,8 @@ export function useTasksLogic() {
         toast.success("Task updated");
       } else {
         await createTask.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? undefined : assignee,
           priority: priority as "low" | "medium" | "high",

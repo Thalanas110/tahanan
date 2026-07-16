@@ -7,8 +7,8 @@ import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useCalendarLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: events, isLoading } = useCalendarEvents(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: events, isLoading } = useCalendarEvents(activeRoomId, activeRoomType);
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -59,7 +59,8 @@ export function useCalendarLogic() {
         toast.success("Event updated");
       } else {
         await createEvent.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           title: title.trim(),
           start_time: startTime,
           assigned_to: assignee === "both" ? undefined : assignee,

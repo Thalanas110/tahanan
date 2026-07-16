@@ -6,8 +6,8 @@ import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 export function useEmergencyLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: events, isLoading } = useEmergencyEvents(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: events, isLoading } = useEmergencyEvents(activeRoomId, activeRoomType);
   const triggerSos = useTriggerSos();
   const acknowledgeSos = useAcknowledgeSos();
   const resolveSos = useResolveSos();
@@ -66,6 +66,8 @@ export function useEmergencyLogic() {
       }
 
       await triggerSos.mutateAsync({
+        roomId: activeRoomId!,
+        roomType: activeRoomType,
         message: message.trim() || undefined,
         locationNote: locationNote.trim() || undefined,
         latitude: lat,
