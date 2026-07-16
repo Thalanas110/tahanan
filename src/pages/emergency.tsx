@@ -27,6 +27,8 @@ export default function Emergency() {
     pastEvents,
     partnerProfile,
     handleTrigger,
+    handleAcknowledgeActiveEvent,
+    handleResolveActiveEvent,
     responderLat,
     responderLon,
   } = useEmergencyLogic();
@@ -88,7 +90,9 @@ export default function Emergency() {
                 <Button
                   className="flex-1 bg-amber-500 hover:bg-amber-600 text-white"
                   size="lg"
-                  onClick={() => acknowledgeSos.mutate(activeEvent.id)}
+                  onClick={() => {
+                    void handleAcknowledgeActiveEvent(activeEvent.id);
+                  }}
                   disabled={acknowledgeSos.isPending}
                 >
                   {acknowledgeSos.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Clock className="w-5 h-5 mr-2" />}
@@ -101,7 +105,9 @@ export default function Emergency() {
                   className="flex-1"
                   variant="outline"
                   size="lg"
-                  onClick={() => resolveSos.mutate(activeEvent.id)}
+                  onClick={() => {
+                    void handleResolveActiveEvent(activeEvent.id);
+                  }}
                   disabled={resolveSos.isPending}
                 >
                   {resolveSos.isPending ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <CheckCircle className="w-5 h-5 mr-2" />}

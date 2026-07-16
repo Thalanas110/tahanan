@@ -3,6 +3,11 @@ import { useEmergencyEvents, useAcknowledgeSos } from "@/hooks/useEmergency";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "wouter";
 import EmergencyAlarm from "@/lib/EmergencyAlarm";
+import {
+  bindEmergencyAudio,
+  runAfterStoppingEmergencyAlert,
+  stopEmergencyAlertPlayback,
+} from "@/lib/emergencyAlarmControl";
 
 export function useGlobalEmergencyAlertLogic() {
   // Global alert monitors ALL couple emergency events (both rooms).
@@ -24,6 +29,8 @@ export function useGlobalEmergencyAlertLogic() {
     (e) => e.status === "acknowledged" && e.triggered_by === user.id && !dismissedAcks.has(e.id)
   ) : undefined;
 
+  useEffect(() => bindEmergencyAudio(audioRef.current), []);
+
   // Handle playing audio
   useEffect(() => {
     if (partnerActiveEvent) {
@@ -34,13 +41,20 @@ export function useGlobalEmergencyAlertLogic() {
       }
       EmergencyAlarm.startAlarm().catch(console.error);
     } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-      EmergencyAlarm.stopAlarm().catch(console.error);
+      void stopEmergencyAlertPlayback(() => EmergencyAlarm.stopAlarm());
     }
   }, [partnerActiveEvent]);
+
+  async function handleAcknowledgePartnerSos(emergencyId: string) {
+    await runAfterStoppingEmergencyAlert(
+      () => stopEmergencyAlertPlayback(() => EmergencyAlarm.stopAlarm()),
+      () => acknowledgeSos.mutate(emergencyId, {
+        onSuccess: () => {
+          setLocation("/emergency");
+        },
+      }),
+    );
+  }
 
   return {
     partnerActiveEvent,
@@ -48,6 +62,7 @@ export function useGlobalEmergencyAlertLogic() {
     acknowledgeSos,
     setLocation,
     audioRef,
+    handleAcknowledgePartnerSos,
     setDismissedAcks,
   };
 }

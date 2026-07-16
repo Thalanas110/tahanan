@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 import { useRoomMembers } from "@/hooks/useRoomMembers";
 import { getPartnerMember } from "@/lib/roomParticipants";
+import { runAfterStoppingEmergencyAlert, stopEmergencyAlertPlayback } from "@/lib/emergencyAlarmControl";
+import EmergencyAlarm from "@/lib/EmergencyAlarm";
 
 export function useEmergencyLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
@@ -88,6 +90,20 @@ export function useEmergencyLogic() {
     }
   }
 
+  async function handleAcknowledgeActiveEvent(emergencyId: string) {
+    await runAfterStoppingEmergencyAlert(
+      () => stopEmergencyAlertPlayback(() => EmergencyAlarm.stopAlarm()),
+      () => acknowledgeSos.mutate(emergencyId),
+    );
+  }
+
+  async function handleResolveActiveEvent(emergencyId: string) {
+    await runAfterStoppingEmergencyAlert(
+      () => stopEmergencyAlertPlayback(() => EmergencyAlarm.stopAlarm()),
+      () => resolveSos.mutate(emergencyId),
+    );
+  }
+
   return {
     events,
     isLoading,
@@ -106,6 +122,8 @@ export function useEmergencyLogic() {
     pastEvents,
     partnerProfile,
     handleTrigger,
+    handleAcknowledgeActiveEvent,
+    handleResolveActiveEvent,
     responderLat,
     responderLon,
   };

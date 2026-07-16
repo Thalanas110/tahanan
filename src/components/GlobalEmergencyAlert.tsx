@@ -9,6 +9,7 @@ export function GlobalEmergencyAlert() {
     acknowledgeSos,
     setLocation,
     audioRef,
+    handleAcknowledgePartnerSos,
     setDismissedAcks,
   } = useGlobalEmergencyAlertLogic();
 
@@ -43,9 +44,7 @@ export function GlobalEmergencyAlert() {
               size="lg" 
               className="w-full text-xl h-16 font-bold bg-white text-destructive hover:bg-white/90 shadow-2xl transition-transform hover:scale-105 active:scale-95"
               onClick={() => {
-                acknowledgeSos.mutate(partnerActiveEvent.id, {
-                  onSuccess: () => setLocation("/emergency")
-                });
+                void handleAcknowledgePartnerSos(partnerActiveEvent.id);
               }}
               disabled={acknowledgeSos.isPending}
             >
