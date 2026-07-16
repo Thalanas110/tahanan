@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
+import { useDashboard, useCoupleRecord } from "@/hooks/useCouple";
 import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote, useUpdateLoveNote } from "@/hooks/useLoveNotes";
 import { useCreateMonthsaryMessage, useMonthsaryMessages, useUpdateMonthsaryMessage } from "@/hooks/useMonthsaryMessages";
 import { toast } from "sonner";
@@ -14,10 +14,14 @@ import {
   findPendingMonthsaryMessage,
   getMonthsaryComposerTarget,
 } from "@/lib/monthsaryMessageDraft";
+import { resolveCurrentCouple } from "@/lib/coupleSource";
 
 export function useLoveNotesLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
   const { data: dashboard } = useDashboard();
+  const { data: directCouple } = useCoupleRecord(
+    activeRoomType === "partner" ? activeRoomId : null,
+  );
   const { data: notes, isLoading } = useLoveNotes(activeRoomId, activeRoomType);
   const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   const createNote = useCreateLoveNote();
@@ -55,8 +59,12 @@ export function useLoveNotesLogic() {
   const partnerMember = getPartnerMember(roomMembers, user?.id);
   const partnerId = partnerMember?.user_id;
   const partnerName = partnerMember?.profiles?.display_name || "Partner";
+  const currentCouple = resolveCurrentCouple({
+    dashboardCouple: dashboard?.couple,
+    directCouple,
+  });
   const relationshipStartDate =
-    activeRoomType === "partner" ? dashboard?.couple?.relationship_start_date ?? null : null;
+    activeRoomType === "partner" ? currentCouple?.relationship_start_date ?? null : null;
   const targetMonthsaryDate = getMonthsaryComposerTarget({
     roomType: activeRoomType,
     relationshipStartDate,

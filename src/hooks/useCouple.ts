@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { buildUpdateCouplePatch } from '@/lib/coupleDraft';
-import { invokeEdgeFunction } from '@/lib/supabase';
+import { invokeEdgeFunction, supabase } from '@/lib/supabase';
 import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile, CoupleType, Cof, CofMember } from '@/types/database';
 
 export interface DashboardSummary {
@@ -15,12 +15,30 @@ export interface DashboardSummary {
 }
 
 export const dashboardQueryKey = ['dashboard-summary'] as const;
+export const coupleQueryKey = (coupleId: string | null) => ['couple', coupleId] as const;
 
 export function useDashboard(enabled = true) {
   return useQuery({
     queryKey: dashboardQueryKey,
     queryFn: () => invokeEdgeFunction<DashboardSummary>('dashboard-summary'),
     enabled,
+  });
+}
+
+export function useCoupleRecord(coupleId: string | null, enabled = true) {
+  return useQuery({
+    queryKey: coupleQueryKey(coupleId),
+    enabled: enabled && !!coupleId,
+    queryFn: async (): Promise<Couple> => {
+      const { data, error } = await supabase
+        .from('couples')
+        .select('*')
+        .eq('id', coupleId!)
+        .single();
+
+      if (error) throw error;
+      return data as Couple;
+    },
   });
 }
 
@@ -60,8 +78,6 @@ export function useUpdateCouple() {
       name?: string;
       relationshipStartDate?: string;
     }) => {
-      // Import supabase client dynamically to avoid circular dependencies if any
-      const { supabase } = await import('@/lib/supabase');
       const { data, error } = await supabase
         .from('couples')
         .update(buildUpdateCouplePatch({ name, relationshipStartDate }))
@@ -70,9 +86,13 @@ export function useUpdateCouple() {
         .single();
       
       if (error) throw error;
-      return data;
+      return data as Couple;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(coupleQueryKey(data.id), data);
+      void queryClient.invalidateQueries({ queryKey: coupleQueryKey(data.id) });
+      void queryClient.invalidateQueries({ queryKey: dashboardQueryKey });
+    },
   });
 }
 

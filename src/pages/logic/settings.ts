@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboard, useUpdateCouple, dashboardQueryKey } from "@/hooks/useCouple";
+import { useDashboard, useCoupleRecord, useUpdateCouple, dashboardQueryKey } from "@/hooks/useCouple";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { useMyRooms } from "@/hooks/useMyRooms";
+import { resolveCurrentCouple } from "@/lib/coupleSource";
 
 export function useSettingsLogic() {
   const { profile, signOut, updateDisplayName } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { data: rooms } = useMyRooms();
+  const { data: directCouple } = useCoupleRecord(
+    dashboard?.couple?.id ?? rooms?.partnerRoom?.id ?? null,
+  );
   const updateCouple = useUpdateCouple();
   const queryClient = useQueryClient();
   
@@ -19,7 +25,10 @@ export function useSettingsLogic() {
   const [newProfileName, setNewProfileName] = useState("");
   const [isSavingProfileName, setIsSavingProfileName] = useState(false);
   
-  const couple = dashboard?.couple;
+  const couple = resolveCurrentCouple({
+    dashboardCouple: dashboard?.couple,
+    directCouple,
+  });
   const members = dashboard?.members || [];
   const partnerProfile = members.find(m => m.user_id !== profile?.id)?.profiles;
 

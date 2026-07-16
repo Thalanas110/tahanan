@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState, type UIEvent } from 'react';
 import { toast } from 'sonner';
 import { useActiveRoom } from '@/context/ActiveRoomContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useDashboard } from '@/hooks/useCouple';
+import { useDashboard, useCoupleRecord } from '@/hooks/useCouple';
 import {
   useCompleteMonthsaryMessage,
   useMonthsaryMessages,
 } from '@/hooks/useMonthsaryMessages';
+import { resolveCurrentCouple } from '@/lib/coupleSource';
 import { findPendingMonthsaryMessage } from '@/lib/monthsaryMessageDraft';
 import { canDismissMonthsaryMessage } from '@/lib/monthsaryMessageState';
 import { isMonthsaryDate, toLocalDateKey } from '@/lib/monthsaryDates';
@@ -14,10 +15,18 @@ import type { MonthsaryMessage } from '@/types/database';
 
 export function useMonthsaryMessageDialogLogic() {
   const { user } = useAuth();
-  const { data: dashboard } = useDashboard(!!user);
   const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: dashboard } = useDashboard(!!user);
+  const { data: directCouple } = useCoupleRecord(
+    activeRoomType === 'partner' ? activeRoomId : null,
+    !!user,
+  );
+  const currentCouple = resolveCurrentCouple({
+    dashboardCouple: dashboard?.couple,
+    directCouple,
+  });
   const relationshipStartDate =
-    activeRoomType === 'partner' ? dashboard?.couple?.relationship_start_date ?? null : null;
+    activeRoomType === 'partner' ? currentCouple?.relationship_start_date ?? null : null;
   const shouldCheck =
     activeRoomType === 'partner' &&
     !!activeRoomId &&
