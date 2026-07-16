@@ -2,37 +2,21 @@ import { useEffect, useMemo, useState, type UIEvent } from 'react';
 import { toast } from 'sonner';
 import { useActiveRoom } from '@/context/ActiveRoomContext';
 import { useAuth } from '@/hooks/useAuth';
-import { useDashboard, useCoupleRecord } from '@/hooks/useCouple';
 import {
   useCompleteMonthsaryMessage,
   useMonthsaryMessages,
 } from '@/hooks/useMonthsaryMessages';
-import { resolveCurrentCouple } from '@/lib/coupleSource';
-import { findPendingMonthsaryMessage } from '@/lib/monthsaryMessageDraft';
+import { findDueMonthsaryMessage } from '@/lib/monthsaryMessageDelivery';
 import { canDismissMonthsaryMessage } from '@/lib/monthsaryMessageState';
-import { isMonthsaryDate, toLocalDateKey } from '@/lib/monthsaryDates';
 import type { MonthsaryMessage } from '@/types/database';
 
 export function useMonthsaryMessageDialogLogic() {
   const { user } = useAuth();
   const { activeRoomId, activeRoomType } = useActiveRoom();
-  const { data: dashboard } = useDashboard(!!user);
-  const { data: directCouple } = useCoupleRecord(
-    activeRoomType === 'partner' ? activeRoomId : null,
-    !!user,
-  );
-  const currentCouple = resolveCurrentCouple({
-    dashboardCouple: dashboard?.couple,
-    directCouple,
-  });
-  const relationshipStartDate =
-    activeRoomType === 'partner' ? currentCouple?.relationship_start_date ?? null : null;
   const shouldCheck =
     activeRoomType === 'partner' &&
     !!activeRoomId &&
-    !!user?.id &&
-    !!relationshipStartDate &&
-    isMonthsaryDate(relationshipStartDate);
+    !!user?.id;
 
   const { data: monthsaryMessages = [] } = useMonthsaryMessages(activeRoomId, shouldCheck);
   const completeMonthsaryMessage = useCompleteMonthsaryMessage();
@@ -43,13 +27,12 @@ export function useMonthsaryMessageDialogLogic() {
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const todayKey = toLocalDateKey(new Date());
   const dueMessage = useMemo(
     () =>
       shouldCheck
-        ? findPendingMonthsaryMessage(monthsaryMessages, user?.id ?? null, todayKey)
+        ? findDueMonthsaryMessage(monthsaryMessages, user?.id ?? null, new Date())
         : null,
-    [monthsaryMessages, shouldCheck, todayKey, user?.id],
+    [monthsaryMessages, shouldCheck, user?.id],
   );
 
   useEffect(() => {
