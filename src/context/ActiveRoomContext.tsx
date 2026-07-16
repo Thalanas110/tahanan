@@ -5,6 +5,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import type { CoupleType } from "@/types/database";
@@ -37,8 +38,9 @@ const ActiveRoomContext = createContext<ActiveRoomCtx>({
 });
 
 export function ActiveRoomProvider({ children }: { children: ReactNode }) {
-  const { data: dashboard, isLoading: dashboardLoading } = useDashboard();
-  const { data: directRooms, isLoading: directRoomsLoading } = useMyRooms();
+  const { user } = useAuth();
+  const { data: dashboard, isLoading: dashboardLoading } = useDashboard(!!user);
+  const { data: directRooms, isLoading: directRoomsLoading } = useMyRooms(!!user);
 
   // Persist last-chosen room in sessionStorage so a page reload keeps the selection.
   const [activeType, setActiveType] = useState<CoupleType>(() => {
@@ -66,7 +68,9 @@ export function ActiveRoomProvider({ children }: { children: ReactNode }) {
 
   const switchRoom = (type: CoupleType) => {
     setActiveType(type);
-    sessionStorage.setItem(ACTIVE_ROOM_SESSION_KEY, type);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(ACTIVE_ROOM_SESSION_KEY, type);
+    }
   };
 
   return (

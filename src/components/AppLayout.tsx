@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navbar } from "./Navbar";
-import { ActiveRoomProvider, useActiveRoom } from "@/context/ActiveRoomContext";
+import { useActiveRoom } from "@/context/ActiveRoomContext";
 
 function AppLayoutFrame({ children }: { children: ReactNode }) {
   const { activeRoomName, activeRoomType } = useActiveRoom();
@@ -31,9 +31,5 @@ function AppLayoutFrame({ children }: { children: ReactNode }) {
 }
 
 export function AppLayout({ children }: { children: ReactNode }) {
-  return (
-    <ActiveRoomProvider>
-      <AppLayoutFrame>{children}</AppLayoutFrame>
-    </ActiveRoomProvider>
-  );
+  return <AppLayoutFrame>{children}</AppLayoutFrame>;
 }
