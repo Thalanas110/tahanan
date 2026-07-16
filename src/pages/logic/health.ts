@@ -4,15 +4,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
 
 export function useHealthLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: notes, isLoading } = useHealthNotes(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: notes, isLoading } = useHealthNotes(activeRoomId, activeRoomType);
   const createNote = useCreateHealthNote();
   const updateNote = useUpdateHealthNote();
   const deleteNote = useDeleteHealthNote();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,8 +42,8 @@ export function useHealthLogic() {
     setIsAdding(true);
   }
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -58,7 +61,8 @@ export function useHealthLogic() {
         toast.success("Health log updated");
       } else {
         await createNote.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           health_type: type.trim() || undefined,
           severity: severity[0],
           notes: details.trim() || undefined,

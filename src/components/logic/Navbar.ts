@@ -14,8 +14,8 @@ export function useMobileNavLogic(location: string) {
 export function useNavbarLogic() {
   const [location] = useLocation();
   const { signOut } = useAuth();
-  const { activeRoomId } = useActiveRoom();
-  const upcomingMilestone = useUpcomingMilestone(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const upcomingMilestone = useUpcomingMilestone(activeRoomId, activeRoomType);
 
   return { location, signOut, upcomingMilestone };
 }

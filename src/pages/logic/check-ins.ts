@@ -2,16 +2,18 @@ import { useState } from "react";
 import { useCheckins, useCreateCheckin, useUpdateCheckin } from "@/hooks/useCheckins";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useDashboard } from "@/hooks/useCouple";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
 
 export function useCheckinsLogic() {
-  const { data: checkins, isLoading } = useCheckins(useActiveRoom().activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { user } = useAuth();
+
+  const { data: checkins, isLoading } = useCheckins(activeRoomId, activeRoomType);
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   const createCheckin = useCreateCheckin();
   const updateCheckin = useUpdateCheckin();
-  const { user } = useAuth();
-  const { data: dashboard } = useDashboard();
-  const { activeRoomId } = useActiveRoom();
   
   const [mood, setMood] = useState("");
   const [energy, setEnergy] = useState<number[]>([3]);
@@ -19,6 +21,8 @@ export function useCheckinsLogic() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [showHealth, setShowHealth] = useState(false);
+  const [healthStatus, setHealthStatus] = useState("");
 
   const resetForm = () => {
     setIsFormOpen(false);
@@ -27,6 +31,8 @@ export function useCheckinsLogic() {
     setEnergy([3]);
     setNote("");
     setIsPrivate(false);
+    setShowHealth(false);
+    setHealthStatus("");
   };
 
   function handleEdit(checkin: any) {
@@ -38,16 +44,15 @@ export function useCheckinsLogic() {
     setIsFormOpen(true);
   }
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!mood) {
+    if (!activeRoomId || !mood) {
       toast.error("Please select a mood");
       return;
     }
-    if (!activeRoomId) return;
 
     try {
       if (editingId) {
@@ -61,9 +66,11 @@ export function useCheckinsLogic() {
         toast.success("Check-in updated");
       } else {
         await createCheckin.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId,
+          roomType: activeRoomType,
           mood,
           energy_level: energy[0],
+          health_status: showHealth ? healthStatus : undefined,
           note: note.trim() || undefined,
           is_private: isPrivate,
         });

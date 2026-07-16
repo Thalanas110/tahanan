@@ -5,15 +5,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
 
 export function useCalendarLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: events, isLoading } = useCalendarEvents(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: events, isLoading } = useCalendarEvents(activeRoomId, activeRoomType);
   const createEvent = useCreateEvent();
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
   const { data: dashboard } = useDashboard();
   const { user } = useAuth();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -40,8 +43,8 @@ export function useCalendarLogic() {
     setIsAdding(true);
   }
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,7 +62,8 @@ export function useCalendarLogic() {
         toast.success("Event updated");
       } else {
         await createEvent.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           title: title.trim(),
           start_time: startTime,
           assigned_to: assignee === "both" ? undefined : assignee,
@@ -88,6 +92,7 @@ export function useCalendarLogic() {
     createEvent,
     updateEvent,
     deleteEvent,
+    roomMembers,
     dashboard,
     user,
     isAdding,

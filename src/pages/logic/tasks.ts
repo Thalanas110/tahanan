@@ -3,24 +3,31 @@ import { useTasks, useCreateTask, useUpdateTaskStatus, useDeleteTask, useUpdateT
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
-import type { TaskStatus } from "@/types/database";
+import type { TaskPriority, TaskStatus } from "@/types/database";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
+
+function isTaskPriority(value: string): value is TaskPriority {
+  return value === "low" || value === "normal" || value === "high";
+}
 
 export function useTasksLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: tasks, isLoading } = useTasks(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: tasks, isLoading } = useTasks(activeRoomId, activeRoomType);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const updateStatus = useUpdateTaskStatus();
   const deleteTask = useDeleteTask();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState<string>("unassigned");
-  const [priority, setPriority] = useState("normal");
+  const [priority, setPriority] = useState<TaskPriority>("normal");
 
   const resetForm = () => {
     setIsAdding(false);
@@ -38,8 +45,8 @@ export function useTasksLogic() {
     setIsAdding(true);
   }
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,15 +58,16 @@ export function useTasksLogic() {
           id: editingId,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? null : assignee,
-          priority: priority as "low" | "medium" | "high",
+          priority,
         });
         toast.success("Task updated");
       } else {
         await createTask.mutateAsync({
-          couple_id: activeRoomId!,
+          roomId: activeRoomId!,
+          roomType: activeRoomType,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? undefined : assignee,
-          priority: priority as "low" | "medium" | "high",
+          priority,
         });
         toast.success("Task added");
       }
@@ -74,6 +82,11 @@ export function useTasksLogic() {
     updateStatus.mutate({ id: task.id, status: newStatus });
   }
 
+  function handlePriorityChange(value: string) {
+    if (!isTaskPriority(value)) return;
+    setPriority(value);
+  }
+
   const pendingTasks = tasks?.filter(t => t.status !== "done") || [];
   const completedTasks = tasks?.filter(t => t.status === "done") || [];
 
@@ -84,6 +97,7 @@ export function useTasksLogic() {
     updateTask,
     updateStatus,
     deleteTask,
+    roomMembers,
     dashboard,
     isAdding,
     setIsAdding: (val: boolean) => {
@@ -96,7 +110,7 @@ export function useTasksLogic() {
     assignee,
     setAssignee,
     priority,
-    setPriority,
+    setPriority: handlePriorityChange,
     myProfile,
     partnerProfile,
     handleSubmit,

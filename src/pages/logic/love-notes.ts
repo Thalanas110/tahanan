@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useDashboard } from "@/hooks/useCouple";
 import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote, useUpdateLoveNote } from "@/hooks/useLoveNotes";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getPartnerMember } from "@/lib/roomParticipants";
+import { buildCreateLoveNoteInput } from "@/lib/loveNoteDraft";
 
 export function useLoveNotesLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: notes, isLoading } = useLoveNotes(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: notes, isLoading } = useLoveNotes(activeRoomId, activeRoomType);
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   const createNote = useCreateLoveNote();
   const updateNote = useUpdateLoveNote();
   const toggleFavorite = useToggleFavoriteLoveNote();
   const deleteNote = useDeleteLoveNote();
   const { user } = useAuth();
-  const { data: dashboard } = useDashboard();
   
   const [isWriting, setIsWriting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,8 +39,9 @@ export function useLoveNotesLogic() {
     setIsWriting(true);
   }
 
-  const partnerId = dashboard?.members.find(m => m.user_id !== user?.id)?.user_id;
-  const partnerName = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles?.display_name || "Partner";
+  const partnerMember = getPartnerMember(roomMembers, user?.id);
+  const partnerId = partnerMember?.user_id;
+  const partnerName = partnerMember?.profiles?.display_name || "Partner";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,13 +57,16 @@ export function useLoveNotesLogic() {
         });
         toast.success("Note updated");
       } else {
-        await createNote.mutateAsync({
-          couple_id: activeRoomId!,
-          recipient_id: partnerId,
-          title: title.trim() || undefined,
-          body: body.trim(),
-          open_when: openWhen.trim() || undefined,
-        });
+        await createNote.mutateAsync(
+          buildCreateLoveNoteInput({
+            roomId: activeRoomId,
+            roomType: activeRoomType,
+            recipientId: partnerId,
+            title: title.trim() || undefined,
+            body: body.trim(),
+            openWhen: openWhen.trim() || undefined,
+          }),
+        );
         toast.success("Note sent");
       }
       resetForm();
@@ -95,6 +101,7 @@ export function useLoveNotesLogic() {
     setBody,
     openWhen,
     setOpenWhen,
+    partnerId,
     partnerName,
     handleSubmit,
     handleEdit,

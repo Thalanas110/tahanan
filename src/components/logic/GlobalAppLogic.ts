@@ -8,7 +8,8 @@ export function useGlobalAppLogic() {
   // Only try to fetch dashboard if user is authenticated
   const { data: dashboard } = useDashboard(!!user);
 
-  useEmergencyRealtime(dashboard?.couple?.id);
+  useEmergencyRealtime(dashboard?.couple?.id, "partner");
+  useEmergencyRealtime(dashboard?.cofCouple?.id, "cof");
 
   return { user };
 }

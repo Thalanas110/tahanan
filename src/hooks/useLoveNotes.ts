@@ -1,19 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { LoveNote } from '@/types/database';
+import type { LoveNote, CoupleType } from '@/types/database';
 
-export const loveNotesQueryKey = (coupleId: string | null) =>
-  ['love-notes', coupleId] as const;
+export const loveNotesQueryKey = (roomId: string | null, roomType: CoupleType) =>
+  ['love-notes', roomId, roomType] as const;
 
-export function useLoveNotes(coupleId: string | null | undefined) {
+export function useLoveNotes(roomId: string | null | undefined, roomType: CoupleType) {
   return useQuery({
-    queryKey: loveNotesQueryKey(coupleId ?? null),
-    enabled: !!coupleId,
+    queryKey: loveNotesQueryKey(roomId ?? null, roomType),
+    enabled: !!roomId,
     queryFn: async () => {
+      const idColumn = roomType === 'cof' ? 'cof_id' : 'couple_id';
       const { data, error } = await supabase
         .from('love_notes')
         .select('*')
-        .eq('couple_id', coupleId!)
+        .eq(idColumn, roomId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as LoveNote[];
@@ -22,7 +23,8 @@ export function useLoveNotes(coupleId: string | null | undefined) {
 }
 
 export interface CreateLoveNoteInput {
-  couple_id: string;
+  roomId: string;
+  roomType: CoupleType;
   title?: string;
   body: string;
   note_type?: string;
@@ -33,12 +35,17 @@ export interface CreateLoveNoteInput {
 export function useCreateLoveNote() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateLoveNoteInput) => {
+    mutationFn: async ({ roomId, roomType, ...input }: CreateLoveNoteInput) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('love_notes')
-        .insert({ ...input, created_by: userData.user.id })
+        .insert({ 
+          ...input, 
+          couple_id: roomType === 'partner' ? roomId : null,
+          cof_id: roomType === 'cof' ? roomId : null,
+          created_by: userData.user.id 
+        })
         .select()
         .single();
       if (error) throw error;

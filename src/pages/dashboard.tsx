@@ -9,6 +9,7 @@ import { useTutorialAutoStart } from "@/components/Tutorial";
 export default function Dashboard() {
   const {
     dashboard,
+    activeRoomId,
     user,
     myProfile,
     partnerProfile,
@@ -21,7 +22,7 @@ export default function Dashboard() {
 
   useTutorialAutoStart();
 
-  if (!dashboard || !dashboard.couple) return null;
+  if (!dashboard || !activeRoomId) return null;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

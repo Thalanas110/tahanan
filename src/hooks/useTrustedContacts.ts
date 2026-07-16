@@ -1,19 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { TrustedContact } from '@/types/database';
+import type { TrustedContact, CoupleType } from '@/types/database';
 
-export const trustedContactsQueryKey = (coupleId: string | null) =>
-  ['trusted-contacts', coupleId] as const;
+export const trustedContactsQueryKey = (roomId: string | null, roomType: CoupleType) =>
+  ['trusted-contacts', roomId, roomType] as const;
 
-export function useTrustedContacts(coupleId: string | null | undefined) {
+export function useTrustedContacts(roomId: string | null | undefined, roomType: CoupleType) {
   return useQuery({
-    queryKey: trustedContactsQueryKey(coupleId ?? null),
-    enabled: !!coupleId,
+    queryKey: trustedContactsQueryKey(roomId ?? null, roomType),
+    enabled: !!roomId,
     queryFn: async () => {
+      const idColumn = roomType === 'cof' ? 'cof_id' : 'couple_id';
       const { data, error } = await supabase
         .from('trusted_contacts')
         .select('*')
-        .eq('couple_id', coupleId!)
+        .eq(idColumn, roomId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as TrustedContact[];
@@ -22,7 +23,8 @@ export function useTrustedContacts(coupleId: string | null | undefined) {
 }
 
 export interface CreateTrustedContactInput {
-  couple_id: string;
+  roomId: string;
+  roomType: CoupleType;
   name: string;
   relationship?: string;
   phone?: string;
@@ -33,12 +35,17 @@ export interface CreateTrustedContactInput {
 export function useCreateTrustedContact() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreateTrustedContactInput) => {
+    mutationFn: async ({ roomId, roomType, ...input }: CreateTrustedContactInput) => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('trusted_contacts')
-        .insert({ ...input, created_by: userData.user.id })
+        .insert({ 
+          ...input, 
+          couple_id: roomType === 'partner' ? roomId : null,
+          cof_id: roomType === 'cof' ? roomId : null,
+          created_by: userData.user.id 
+        })
         .select()
         .single();
       if (error) throw error;

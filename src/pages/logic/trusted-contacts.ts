@@ -4,8 +4,8 @@ import { useActiveRoom } from "@/context/ActiveRoomContext";
 import { toast } from "sonner";
 
 export function useTrustedContactsLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: contacts, isLoading } = useTrustedContacts(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: contacts, isLoading } = useTrustedContacts(activeRoomId, activeRoomType);
   const createContact = useCreateTrustedContact();
   const deleteContact = useDeleteTrustedContact();
 
@@ -31,7 +31,8 @@ export function useTrustedContactsLogic() {
 
     try {
       await createContact.mutateAsync({
-        couple_id: activeRoomId,
+        roomId: activeRoomId,
+        roomType: activeRoomType,
         name: name.trim(),
         relationship: relationship.trim() || undefined,
         phone: phone.trim() || undefined,

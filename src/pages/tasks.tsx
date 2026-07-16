@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { Loader2, CheckSquare, Clock, Plus, Trash2, CheckCircle2, Circle, Pencil } from "lucide-react";
+import { getAssigneeName } from "@/lib/roomParticipants";
 
 export default function Tasks() {
   const {
@@ -13,7 +14,7 @@ export default function Tasks() {
     createTask,
     updateTask,
     deleteTask,
-    dashboard,
+    roomMembers,
     isAdding,
     setIsAdding,
     editingId,
@@ -120,7 +121,7 @@ export default function Tasks() {
                     onToggle={() => handleToggleStatus(task)}
                     onEdit={() => handleEdit(task)}
                     onDelete={() => deleteTask.mutate(task.id)}
-                    members={dashboard?.members}
+                    members={roomMembers}
                   />
                 ))}
               </ul>
@@ -140,7 +141,7 @@ export default function Tasks() {
                     onToggle={() => handleToggleStatus(task)}
                     onEdit={() => handleEdit(task)}
                     onDelete={() => deleteTask.mutate(task.id)}
-                    members={dashboard?.members}
+                    members={roomMembers}
                   />
                 ))}
               </ul>
@@ -154,7 +155,7 @@ export default function Tasks() {
 
 function TaskItem({ task, onToggle, onEdit, onDelete, members }: { task: any, onToggle: () => void, onEdit: () => void, onDelete: () => void, members: any }) {
   const isDone = task.status === "done";
-  const assigneeName = members?.find((m: any) => m.user_id === task.assigned_to)?.profiles?.display_name;
+  const assigneeName = getAssigneeName(members ?? [], task.assigned_to);
 
   return (
     <Card className={`transition-colors ${isDone ? 'bg-muted/50' : 'bg-card'}`}>

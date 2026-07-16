@@ -4,15 +4,18 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getPartnerMember } from "@/lib/roomParticipants";
 
 export function useEmergencyLogic() {
-  const { activeRoomId } = useActiveRoom();
-  const { data: events, isLoading } = useEmergencyEvents(activeRoomId);
+  const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: events, isLoading } = useEmergencyEvents(activeRoomId, activeRoomType);
   const triggerSos = useTriggerSos();
   const acknowledgeSos = useAcknowledgeSos();
   const resolveSos = useResolveSos();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   
   const [isTriggering, setIsTriggering] = useState(false);
   const [message, setMessage] = useState("");
@@ -24,7 +27,7 @@ export function useEmergencyLogic() {
   const activeEvent = events?.find(e => e.status !== "resolved");
   const pastEvents = events?.filter(e => e.status === "resolved") || [];
 
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   // Fetch responder's location if there's an active event from the partner
   useEffect(() => {
@@ -66,6 +69,8 @@ export function useEmergencyLogic() {
       }
 
       await triggerSos.mutateAsync({
+        roomId: activeRoomId!,
+        roomType: activeRoomType,
         message: message.trim() || undefined,
         locationNote: locationNote.trim() || undefined,
         latitude: lat,

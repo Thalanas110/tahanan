@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { invokeEdgeFunction } from '@/lib/supabase';
-import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile, CoupleType } from '@/types/database';
+import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile, CoupleType, Cof, CofMember } from '@/types/database';
 
 export interface DashboardSummary {
   couple: Couple | null;
   /** The user's Close/Couple of Friends space, if one exists. */
-  cofCouple: Couple | null;
+  cofCouple: Cof | null;
   members: { user_id: string; profiles: Profile }[];
   myLatestCheckin: DailyCheckin | null;
   partnerLatestCheckin: DailyCheckin | null;
