@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard, useUpdateCouple, dashboardQueryKey } from "@/hooks/useCouple";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
 
 export function useSettingsLogic() {
   const { profile, signOut, updateDisplayName } = useAuth();
@@ -21,7 +22,7 @@ export function useSettingsLogic() {
   const partnerProfile = members.find(m => m.user_id !== profile?.id)?.profiles;
 
   const cofCouple = dashboard?.cofCouple;
-  const cofMembers = dashboard?.cofMembers || [];
+  const { data: cofMembers = [] } = useRoomMembers(cofCouple?.id ?? null, "cof");
   const cofPartnerProfile = cofMembers.find(m => m.user_id !== profile?.id)?.profiles;
 
   const handleSaveName = () => {

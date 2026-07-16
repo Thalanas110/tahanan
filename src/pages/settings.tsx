@@ -34,7 +34,7 @@ export default function Settings() {
   const [isCodeVisible, setIsCodeVisible] = useState(false);
   const [isCofCodeVisible, setIsCofCodeVisible] = useState(false);
 
-  const handleCopyCode = (code: string | undefined) => {
+  const handleCopyCode = (code: string | null | undefined) => {
     if (code) {
       navigator.clipboard.writeText(code);
       toast.success("Invite code copied to clipboard!");

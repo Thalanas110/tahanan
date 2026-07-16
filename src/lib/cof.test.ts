@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { createCofRoom, joinCofRoom } from './cof';
+import { createCofRoom, joinCofRoom } from './cof.ts';
 
 function makeRpcClient<T>(result: { data: T | null; error: { message: string } | null }) {
   const calls: Array<{ name: string; args: Record<string, unknown> }> = [];

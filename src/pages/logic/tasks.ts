@@ -3,10 +3,14 @@ import { useTasks, useCreateTask, useUpdateTaskStatus, useDeleteTask, useUpdateT
 import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
-import type { TaskStatus } from "@/types/database";
+import type { TaskPriority, TaskStatus } from "@/types/database";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 import { useRoomMembers } from "@/hooks/useRoomMembers";
 import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
+
+function isTaskPriority(value: string): value is TaskPriority {
+  return value === "low" || value === "normal" || value === "high";
+}
 
 export function useTasksLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
@@ -23,7 +27,7 @@ export function useTasksLogic() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [assignee, setAssignee] = useState<string>("unassigned");
-  const [priority, setPriority] = useState("normal");
+  const [priority, setPriority] = useState<TaskPriority>("normal");
 
   const resetForm = () => {
     setIsAdding(false);
@@ -54,7 +58,7 @@ export function useTasksLogic() {
           id: editingId,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? null : assignee,
-          priority: priority as "low" | "medium" | "high",
+          priority,
         });
         toast.success("Task updated");
       } else {
@@ -63,7 +67,7 @@ export function useTasksLogic() {
           roomType: activeRoomType,
           title: title.trim(),
           assigned_to: assignee === "unassigned" ? undefined : assignee,
-          priority: priority as "low" | "medium" | "high",
+          priority,
         });
         toast.success("Task added");
       }
@@ -76,6 +80,11 @@ export function useTasksLogic() {
   function handleToggleStatus(task: any) {
     const newStatus: TaskStatus = task.status === "done" ? "pending" : "done";
     updateStatus.mutate({ id: task.id, status: newStatus });
+  }
+
+  function handlePriorityChange(value: string) {
+    if (!isTaskPriority(value)) return;
+    setPriority(value);
   }
 
   const pendingTasks = tasks?.filter(t => t.status !== "done") || [];
@@ -101,7 +110,7 @@ export function useTasksLogic() {
     assignee,
     setAssignee,
     priority,
-    setPriority,
+    setPriority: handlePriorityChange,
     myProfile,
     partnerProfile,
     handleSubmit,
