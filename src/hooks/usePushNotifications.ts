@@ -1,15 +1,64 @@
 import { useEffect } from 'react';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+
+const SOS_NOTIFICATION_CHANNEL = {
+  id: 'sos_alerts',
+  name: 'SOS Alerts',
+  description: 'Urgent emergency alerts from your active Tahanan space.',
+  importance: 5 as const,
+  visibility: 1 as const,
+  vibration: true,
+};
 
 export function usePushNotifications() {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !Capacitor.isNativePlatform()) return;
+    const isAndroid = Capacitor.getPlatform() === 'android';
+
+    const listeners: PluginListenerHandle[] = [];
 
     const registerPush = async () => {
+      listeners.push(
+        await PushNotifications.addListener('registration', async (token) => {
+          console.log('Push registration success, token: ' + token.value);
+          const { error } = await supabase
+            .from('profiles')
+            .update({ fcm_token: token.value })
+            .eq('id', user.id);
+
+          if (error) {
+            console.error('Failed to save FCM token to Supabase:', error);
+          }
+        }),
+      );
+
+      listeners.push(
+        await PushNotifications.addListener('registrationError', (error) => {
+          console.error('Error on push registration: ' + JSON.stringify(error));
+        }),
+      );
+
+      listeners.push(
+        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push notification received:', notification);
+        }),
+      );
+
+      listeners.push(
+        await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+          console.log('Push notification action performed:', notification);
+        }),
+      );
+
+      if (isAndroid) {
+        await PushNotifications.createChannel(SOS_NOTIFICATION_CHANNEL);
+      }
+
       // Check if we have permission
       let permStatus = await PushNotifications.checkPermissions();
 
@@ -26,29 +75,12 @@ export function usePushNotifications() {
       await PushNotifications.register();
     };
 
-    registerPush();
-
-    // Listeners
-    const registrationListener = PushNotifications.addListener('registration', async (token) => {
-      console.log('Push registration success, token: ' + token.value);
-      // Save token to Supabase profiles
-      const { error } = await supabase
-        .from('profiles')
-        .update({ fcm_token: token.value })
-        .eq('id', user.id);
-        
-      if (error) {
-        console.error('Failed to save FCM token to Supabase:', error);
-      }
-    });
-
-    const errorListener = PushNotifications.addListener('registrationError', (error: any) => {
-      console.error('Error on push registration: ' + JSON.stringify(error));
+    registerPush().catch((error) => {
+      console.error('Failed to initialize push notifications:', error);
     });
 
     return () => {
-      registrationListener.then(l => l.remove());
-      errorListener.then(l => l.remove());
+      void Promise.all(listeners.map((listener) => listener.remove()));
     };
-  }, [user]);
+  }, [user?.id]);
 }

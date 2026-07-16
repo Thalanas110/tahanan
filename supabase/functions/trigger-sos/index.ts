@@ -91,7 +91,16 @@ Deno.serve(async (req) => {
         }
 
         if (partnerFcmToken) {
-            await sendFcmMessage(partnerFcmToken, { type: 'sos' });
+            await sendFcmMessage(partnerFcmToken, {
+              type: 'sos',
+              emergencyId: emergency.id,
+              roomId,
+              roomType,
+              title: 'SOS Alert',
+              body: message?.trim()
+                ? `${triggerName}: ${message.trim()}`
+                : `${triggerName} needs your attention right now.`,
+            });
         }
       } catch (err) {
         // Log but never block the response

@@ -1,6 +1,6 @@
 import { GoogleAuth } from 'npm:google-auth-library';
 
-export async function sendFcmMessage(fcmToken: string, payload: any) {
+export async function sendFcmMessage(fcmToken: string, payload: Record<string, string>) {
   try {
     const serviceAccountStr = Deno.env.get('FCM_SERVICE_ACCOUNT');
     if (!serviceAccountStr) {

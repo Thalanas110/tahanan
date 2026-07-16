@@ -4,4 +4,9 @@
     <string name="title_activity_main">Tahanan</string>
     <string name="package_name">com.tahanan.app</string>
     <string name="custom_url_scheme">com.tahanan.app</string>
+    <string name="default_notification_channel_id">sos_alerts</string>
+    <string name="sos_notification_channel_name">SOS Alerts</string>
+    <string name="sos_notification_channel_description">Urgent emergency alerts from your active Tahanan space.</string>
+    <string name="sos_notification_title">SOS Alert</string>
+    <string name="sos_notification_body">Someone in your Tahanan space needs your attention right now.</string>
 </resources>

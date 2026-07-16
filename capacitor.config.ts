@@ -1,3 +1,5 @@
+/// <reference types="@capacitor/push-notifications" />
+
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -16,6 +18,11 @@ const config: CapacitorConfig = {
     allowMixedContent: false,
     // Enable back-button navigation inside the WebView
     captureInput: true,
+  },
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ['sound', 'alert', 'badge'],
+    },
   },
 };
 
