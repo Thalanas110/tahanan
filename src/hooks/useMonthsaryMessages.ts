@@ -15,7 +15,8 @@ export function useMonthsaryMessages(coupleId: string | null | undefined, enable
         .select('*')
         .eq('couple_id', coupleId!)
         .is('completed_at', null)
-        .order('created_at', { ascending: false });
+        .order('target_monthsary_date', { ascending: true })
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data as MonthsaryMessage[];
@@ -28,7 +29,7 @@ export function useCreateMonthsaryMessage() {
   return useMutation({
     mutationFn: async (input: {
       couple_id: string;
-      recipient_id: string;
+      recipient_id: string | null;
       title: string | null;
       body: string;
       target_monthsary_date: string;

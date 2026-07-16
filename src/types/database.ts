@@ -109,7 +109,7 @@ export interface MonthsaryMessage {
   id: string;
   couple_id: string;
   created_by: string;
-  recipient_id: string;
+  recipient_id: string | null;
   title: string | null;
   body: string;
   target_monthsary_date: string;

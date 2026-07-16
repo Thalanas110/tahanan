@@ -6,12 +6,11 @@ import { useCreateMonthsaryMessage, useMonthsaryMessages, useUpdateMonthsaryMess
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 import { useRoomMembers } from "@/hooks/useRoomMembers";
-import { type MonthsaryMessage } from "@/types/database";
 import { getPartnerMember } from "@/lib/roomParticipants";
 import { buildCreateLoveNoteInput } from "@/lib/loveNoteDraft";
 import {
   buildMonthsaryMessageInput,
-  findPendingMonthsaryMessage,
+  findEditableMonthsaryMessage,
   getMonthsaryComposerTarget,
 } from "@/lib/monthsaryMessageDraft";
 import { getMonthsaryComposerBlocker } from "@/lib/monthsaryComposer";
@@ -24,7 +23,7 @@ export function useLoveNotesLogic() {
     activeRoomType === "partner" ? activeRoomId : null,
   );
   const { data: notes, isLoading } = useLoveNotes(activeRoomId, activeRoomType);
-  const { data: roomMembers = [], isLoading: roomMembersLoading } = useRoomMembers(
+  const { data: roomMembers = [] } = useRoomMembers(
     activeRoomId,
     activeRoomType,
   );
@@ -76,23 +75,22 @@ export function useLoveNotesLogic() {
   const monthsaryComposerBlocker = getMonthsaryComposerBlocker({
     roomType: activeRoomType,
     relationshipStartDate,
-    partnerId,
-    partnerLookupPending: roomMembersLoading,
   });
   const { data: monthsaryMessages = [] } = useMonthsaryMessages(
     activeRoomType === "partner" ? activeRoomId : null,
     activeRoomType === "partner",
   );
-  const pendingMonthsaryMessage = findPendingMonthsaryMessage(
+  const editableMonthsaryMessage = findEditableMonthsaryMessage(
     monthsaryMessages,
-    partnerId,
-    targetMonthsaryDate,
+    user?.id ?? null,
   );
+  const effectiveTargetMonthsaryDate =
+    editableMonthsaryMessage?.target_monthsary_date ?? targetMonthsaryDate;
 
   useEffect(() => {
-    setMonthsaryTitle(pendingMonthsaryMessage?.title ?? "");
-    setMonthsaryBody(pendingMonthsaryMessage?.body ?? "");
-  }, [pendingMonthsaryMessage?.id, pendingMonthsaryMessage?.title, pendingMonthsaryMessage?.body]);
+    setMonthsaryTitle(editableMonthsaryMessage?.title ?? "");
+    setMonthsaryBody(editableMonthsaryMessage?.body ?? "");
+  }, [editableMonthsaryMessage?.id, editableMonthsaryMessage?.title, editableMonthsaryMessage?.body]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -142,34 +140,41 @@ export function useLoveNotesLogic() {
     if (
       activeRoomType !== "partner" ||
       !activeRoomId ||
-      !partnerId ||
-      !targetMonthsaryDate
+      !effectiveTargetMonthsaryDate
     ) {
       return;
     }
 
+    const recipientIdForSave =
+      partnerId ?? editableMonthsaryMessage?.recipient_id ?? null;
+
     const payload = buildMonthsaryMessageInput({
       coupleId: activeRoomId,
-      recipientId: partnerId,
+      recipientId: recipientIdForSave,
       title: monthsaryTitle,
       body: monthsaryBody,
-      targetMonthsaryDate,
+      targetMonthsaryDate: effectiveTargetMonthsaryDate,
     });
 
     try {
-      if (pendingMonthsaryMessage) {
+      if (editableMonthsaryMessage) {
         await updateMonthsaryMessage.mutateAsync({
-          id: pendingMonthsaryMessage.id,
+          id: editableMonthsaryMessage.id,
+          recipient_id: payload.recipient_id,
           title: payload.title,
           body: payload.body,
         });
         toast.success("Monthsary message updated");
       } else {
         await createMonthsaryMessage.mutateAsync(payload);
-        toast.success("Monthsary message saved");
+        toast.success(
+          recipientIdForSave
+            ? "Monthsary message saved"
+            : "Monthsary message saved for your future partner",
+        );
       }
     } catch (error) {
-      toast.error(pendingMonthsaryMessage ? "Failed to update monthsary message" : "Failed to save monthsary message");
+      toast.error(editableMonthsaryMessage ? "Failed to update monthsary message" : "Failed to save monthsary message");
     }
   }
 
@@ -203,13 +208,13 @@ export function useLoveNotesLogic() {
     partnerId,
     partnerName,
     relationshipStartDate,
-    targetMonthsaryDate,
+    targetMonthsaryDate: effectiveTargetMonthsaryDate,
     monthsaryComposerBlocker,
     monthsaryTitle,
     setMonthsaryTitle,
     monthsaryBody,
     setMonthsaryBody,
-    pendingMonthsaryMessage,
+    editableMonthsaryMessage,
     createMonthsaryMessage,
     updateMonthsaryMessage,
     handleSubmit,

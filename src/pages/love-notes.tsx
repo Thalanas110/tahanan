@@ -47,7 +47,8 @@ export default function LoveNotes() {
     setMonthsaryTitle,
     monthsaryBody,
     setMonthsaryBody,
-    pendingMonthsaryMessage,
+    editableMonthsaryMessage,
+    partnerId,
     createMonthsaryMessage,
     updateMonthsaryMessage,
     handleSubmit,
@@ -78,7 +79,9 @@ export default function LoveNotes() {
             <CardTitle className="font-serif text-primary">Next Monthsary Message</CardTitle>
             <p className="text-sm text-muted-foreground">
               {relationshipStartDate && targetMonthsaryDate
-                ? `This message will open on ${format(new Date(`${targetMonthsaryDate}T12:00:00`), "MMMM d, yyyy")}.`
+                ? partnerId
+                  ? `This message targets ${format(new Date(`${targetMonthsaryDate}T12:00:00`), "MMMM d, yyyy")}. If that date has already passed, your partner will see it the next time they open the app.`
+                  : `This message targets ${format(new Date(`${targetMonthsaryDate}T12:00:00`), "MMMM d, yyyy")}. It will be assigned to the first partner who joins this space, and if that date has already passed they will see it right away.`
                 : "Add your relationship start date in Settings to unlock monthsary messages."}
             </p>
           </CardHeader>
@@ -117,7 +120,7 @@ export default function LoveNotes() {
                   {(createMonthsaryMessage.isPending || updateMonthsaryMessage.isPending) && (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   )}
-                  {pendingMonthsaryMessage ? "Update Monthsary Message" : "Save Monthsary Message"}
+                  {editableMonthsaryMessage ? "Update Monthsary Message" : "Save Monthsary Message"}
                 </Button>
               </form>
             ) : null}
