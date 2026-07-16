@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useCreateCouple, useJoinCouple, useDashboard } from "@/hooks/useCouple";
 import { useCreateCof, useJoinCof } from "@/hooks/useCof";
+import { useMyRooms } from "@/hooks/useMyRooms";
+import { resolveAvailableRooms } from "@/context/activeRoomState";
 import { toast } from "sonner";
 
 export function useOnboardingLogic() {
@@ -14,8 +16,13 @@ export function useOnboardingLogic() {
   // Determine if the user already has a 'partner' couple — if so, the only
   // new room they may create is a 'cof' one.
   const { data: dashboard } = useDashboard();
-  const hasPartnerCouple = !!dashboard?.couple;
-  const hasCofCouple = !!dashboard?.cofCouple;
+  const { data: directRooms } = useMyRooms();
+  const availableRooms = resolveAvailableRooms({
+    dashboard,
+    directRooms,
+  });
+  const hasPartnerCouple = !!availableRooms.partnerRoom;
+  const hasCofCouple = !!availableRooms.cofRoom;
 
   const [coupleName, setCoupleName] = useState("");
   const [inviteCode, setInviteCode] = useState("");

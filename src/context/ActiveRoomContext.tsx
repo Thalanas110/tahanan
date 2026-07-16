@@ -6,10 +6,12 @@ import {
   type ReactNode,
 } from "react";
 import { useDashboard } from "@/hooks/useCouple";
+import { useMyRooms } from "@/hooks/useMyRooms";
 import type { CoupleType } from "@/types/database";
 import {
   ACTIVE_ROOM_SESSION_KEY,
   readStoredRoomType,
+  resolveAvailableRooms,
   resolveActiveRoomState,
 } from "./activeRoomState";
 
@@ -35,30 +37,32 @@ const ActiveRoomContext = createContext<ActiveRoomCtx>({
 });
 
 export function ActiveRoomProvider({ children }: { children: ReactNode }) {
-  const { data: dashboard } = useDashboard();
+  const { data: dashboard, isLoading: dashboardLoading } = useDashboard();
+  const { data: directRooms, isLoading: directRoomsLoading } = useMyRooms();
 
   // Persist last-chosen room in sessionStorage so a page reload keeps the selection.
   const [activeType, setActiveType] = useState<CoupleType>(() => {
     return readStoredRoomType(typeof window === "undefined" ? null : sessionStorage);
   });
 
+  const availableRooms = resolveAvailableRooms({
+    dashboard,
+    directRooms,
+  });
+
   const roomState = resolveActiveRoomState({
     storedType: activeType,
-    partnerRoom: dashboard?.couple
-      ? { id: dashboard.couple.id, name: dashboard.couple.name }
-      : null,
-    cofRoom: dashboard?.cofCouple
-      ? { id: dashboard.cofCouple.id, name: dashboard.cofCouple.name }
-      : null,
+    partnerRoom: availableRooms.partnerRoom,
+    cofRoom: availableRooms.cofRoom,
   });
 
   // If the user switches to COF but loses the COF room, fall back to partner.
   useEffect(() => {
-    if (activeType === "cof" && !roomState.hasCof) {
+    if (!dashboardLoading && !directRoomsLoading && activeType === "cof" && !roomState.hasCof) {
       setActiveType("partner");
       sessionStorage.removeItem(ACTIVE_ROOM_SESSION_KEY);
     }
-  }, [activeType, roomState.hasCof]);
+  }, [activeType, dashboardLoading, directRoomsLoading, roomState.hasCof]);
 
   const switchRoom = (type: CoupleType) => {
     setActiveType(type);
