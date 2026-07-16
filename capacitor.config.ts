@@ -16,8 +16,8 @@ const config: CapacitorConfig = {
   android: {
     // Allow mixed-content for development (disable in production if not needed)
     allowMixedContent: false,
-    // Enable back-button navigation inside the WebView
-    captureInput: true,
+    // Keep native WebView text editing so Android IME behavior stays reliable.
+    captureInput: false,
   },
   plugins: {
     PushNotifications: {
