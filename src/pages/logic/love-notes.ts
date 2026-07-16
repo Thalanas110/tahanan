@@ -14,6 +14,7 @@ import {
   findPendingMonthsaryMessage,
   getMonthsaryComposerTarget,
 } from "@/lib/monthsaryMessageDraft";
+import { getMonthsaryComposerBlocker } from "@/lib/monthsaryComposer";
 import { resolveCurrentCouple } from "@/lib/coupleSource";
 
 export function useLoveNotesLogic() {
@@ -23,7 +24,10 @@ export function useLoveNotesLogic() {
     activeRoomType === "partner" ? activeRoomId : null,
   );
   const { data: notes, isLoading } = useLoveNotes(activeRoomId, activeRoomType);
-  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
+  const { data: roomMembers = [], isLoading: roomMembersLoading } = useRoomMembers(
+    activeRoomId,
+    activeRoomType,
+  );
   const createNote = useCreateLoveNote();
   const updateNote = useUpdateLoveNote();
   const toggleFavorite = useToggleFavoriteLoveNote();
@@ -68,6 +72,12 @@ export function useLoveNotesLogic() {
   const targetMonthsaryDate = getMonthsaryComposerTarget({
     roomType: activeRoomType,
     relationshipStartDate,
+  });
+  const monthsaryComposerBlocker = getMonthsaryComposerBlocker({
+    roomType: activeRoomType,
+    relationshipStartDate,
+    partnerId,
+    partnerLookupPending: roomMembersLoading,
   });
   const { data: monthsaryMessages = [] } = useMonthsaryMessages(
     activeRoomType === "partner" ? activeRoomId : null,
@@ -119,12 +129,21 @@ export function useLoveNotesLogic() {
   async function handleMonthsarySubmit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (monthsaryComposerBlocker) {
+      toast.error(monthsaryComposerBlocker);
+      return;
+    }
+
+    if (!monthsaryBody.trim()) {
+      toast.error("Please write your monthsary message");
+      return;
+    }
+
     if (
       activeRoomType !== "partner" ||
       !activeRoomId ||
       !partnerId ||
-      !targetMonthsaryDate ||
-      !monthsaryBody.trim()
+      !targetMonthsaryDate
     ) {
       return;
     }
@@ -185,6 +204,7 @@ export function useLoveNotesLogic() {
     partnerName,
     relationshipStartDate,
     targetMonthsaryDate,
+    monthsaryComposerBlocker,
     monthsaryTitle,
     setMonthsaryTitle,
     monthsaryBody,

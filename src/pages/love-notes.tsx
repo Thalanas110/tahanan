@@ -42,6 +42,7 @@ export default function LoveNotes() {
     partnerName,
     relationshipStartDate,
     targetMonthsaryDate,
+    monthsaryComposerBlocker,
     monthsaryTitle,
     setMonthsaryTitle,
     monthsaryBody,
@@ -101,10 +102,17 @@ export default function LoveNotes() {
                     required
                   />
                 </div>
+                {monthsaryComposerBlocker ? (
+                  <p className="text-sm text-muted-foreground">{monthsaryComposerBlocker}</p>
+                ) : null}
                 <Button
                   type="submit"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                  disabled={createMonthsaryMessage.isPending || updateMonthsaryMessage.isPending}
+                  disabled={
+                    !!monthsaryComposerBlocker ||
+                    createMonthsaryMessage.isPending ||
+                    updateMonthsaryMessage.isPending
+                  }
                 >
                   {(createMonthsaryMessage.isPending || updateMonthsaryMessage.isPending) && (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
