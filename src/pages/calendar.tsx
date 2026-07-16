@@ -23,6 +23,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { getAssigneeName } from "@/lib/roomParticipants";
 import { useState } from "react";
 
 interface DatePickerProps {
@@ -265,7 +266,7 @@ export default function CalendarPage() {
     createEvent,
     updateEvent,
     deleteEvent,
-    dashboard,
+    roomMembers,
     isAdding,
     setIsAdding,
     editingId,
@@ -368,7 +369,7 @@ export default function CalendarPage() {
                 </h2>
                 <div className="grid gap-3">
                   {groupedEvents[dayStr].map(event => {
-                    const assigneeName = dashboard?.members.find(m => m.user_id === event.assigned_to)?.profiles?.display_name;
+                    const assigneeName = getAssigneeName(roomMembers, event.assigned_to);
 
                     return (
                       <Card key={event.id} className={`overflow-hidden ${isTodayDate ? 'border-primary/30' : ''}`}>

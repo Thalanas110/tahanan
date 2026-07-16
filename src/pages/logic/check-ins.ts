@@ -2,15 +2,16 @@ import { useState } from "react";
 import { useCheckins, useCreateCheckin, useUpdateCheckin } from "@/hooks/useCheckins";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { useDashboard } from "@/hooks/useCouple";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getMyMember, getPartnerMember } from "@/lib/roomParticipants";
 
 export function useCheckinsLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
-  const { data: dashboard } = useDashboard();
   const { user } = useAuth();
 
   const { data: checkins, isLoading } = useCheckins(activeRoomId, activeRoomType);
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   const createCheckin = useCreateCheckin();
   const updateCheckin = useUpdateCheckin();
   
@@ -43,8 +44,8 @@ export function useCheckinsLogic() {
     setIsFormOpen(true);
   }
 
-  const myProfile = dashboard?.members.find(m => m.user_id === user?.id)?.profiles;
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const myProfile = getMyMember(roomMembers, user?.id)?.profiles ?? null;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

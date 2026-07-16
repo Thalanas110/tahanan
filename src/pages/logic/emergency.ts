@@ -4,6 +4,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useDashboard } from "@/hooks/useCouple";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
+import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { getPartnerMember } from "@/lib/roomParticipants";
 
 export function useEmergencyLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
@@ -13,6 +15,7 @@ export function useEmergencyLogic() {
   const resolveSos = useResolveSos();
   const { user } = useAuth();
   const { data: dashboard } = useDashboard();
+  const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   
   const [isTriggering, setIsTriggering] = useState(false);
   const [message, setMessage] = useState("");
@@ -24,7 +27,7 @@ export function useEmergencyLogic() {
   const activeEvent = events?.find(e => e.status !== "resolved");
   const pastEvents = events?.filter(e => e.status === "resolved") || [];
 
-  const partnerProfile = dashboard?.members.find(m => m.user_id !== user?.id)?.profiles;
+  const partnerProfile = getPartnerMember(roomMembers, user?.id)?.profiles ?? null;
 
   // Fetch responder's location if there's an active event from the partner
   useEffect(() => {
