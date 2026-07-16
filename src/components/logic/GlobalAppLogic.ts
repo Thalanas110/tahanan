@@ -11,5 +11,5 @@ export function useGlobalAppLogic() {
   useEmergencyRealtime(dashboard?.couple?.id, "partner");
   useEmergencyRealtime(dashboard?.cofCouple?.id, "cof");
 
-  return { user };
+  return { user, dashboard };
 }
