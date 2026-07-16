@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useCreateCouple, useJoinCouple, useDashboard } from "@/hooks/useCouple";
+import { useCreateCof, useJoinCof } from "@/hooks/useCof";
 import { toast } from "sonner";
 
 export function useOnboardingLogic() {
   const [, setLocation] = useLocation();
   const createCouple = useCreateCouple();
   const joinCouple = useJoinCouple();
+  const createCof = useCreateCof();
+  const joinCof = useJoinCof();
 
   // Determine if the user already has a 'partner' couple — if so, the only
   // new room they may create is a 'cof' one.
@@ -27,13 +30,17 @@ export function useOnboardingLogic() {
     const type = hasPartnerCouple ? "cof" : "partner";
 
     try {
-      const res = await createCouple.mutateAsync({ name: coupleName, type });
-      setCreatedInviteCode(res.couple.invite_code);
-      const label = type === "cof" ? "COF space" : "space";
-      toast.success(`${label.charAt(0).toUpperCase() + label.slice(1)} created! Share your code.`);
+      if (hasPartnerCouple) {
+        const res = await createCof.mutateAsync({ name: coupleName });
+        setCreatedInviteCode(res.cof.invite_code);
+        toast.success("COF space created! Share your code.");
+      } else {
+        const res = await createCouple.mutateAsync({ name: coupleName });
+        setCreatedInviteCode(res.couple.invite_code);
+        toast.success("Space created! Share your code.");
+      }
     } catch (err: any) {
       const msg: string = err?.message ?? "";
-      // Bounce home if stale cache / double-submit for the same type.
       if (msg.toLowerCase().includes("already part of")) {
         toast.info("You already have that space — taking you home.");
         setLocation("/dashboard");
@@ -50,7 +57,11 @@ export function useOnboardingLogic() {
       return;
     }
     try {
-      await joinCouple.mutateAsync(inviteCode.toUpperCase());
+      if (hasPartnerCouple) {
+        await joinCof.mutateAsync(inviteCode.toUpperCase());
+      } else {
+        await joinCouple.mutateAsync(inviteCode.toUpperCase());
+      }
       toast.success("Joined successfully!");
       setLocation("/dashboard");
     } catch (err: any) {
@@ -59,8 +70,8 @@ export function useOnboardingLogic() {
   }
 
   return {
-    createCouple,
-    joinCouple,
+    createPending: createCouple.isPending || createCof.isPending,
+    joinPending: joinCouple.isPending || joinCof.isPending,
     coupleName,
     setCoupleName,
     inviteCode,

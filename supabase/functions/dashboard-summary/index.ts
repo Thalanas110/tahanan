@@ -21,21 +21,26 @@ Deno.serve(async (req) => {
 
     if (!user) return errorResponse('Not authenticated', 401);
 
-    // Fetch all couple memberships for the user (at most 2: one per type).
-    const { data: memberships } = await supabase
-      .from('couple_members')
-      .select('couple_id, couple_type, couples(id, name, invite_code, type, created_by, created_at)')
-      .eq('user_id', user.id);
+    // Fetch both couple and cof memberships for the user.
+    const [{ data: partnerMembership }, { data: cofMembership }] = await Promise.all([
+      supabase
+        .from('couple_members')
+        .select('couple_id, couples(id, name, invite_code, created_by, created_at)')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('cof_members')
+        .select('cof_id, cofs(id, name, invite_code, created_by, created_at)')
+        .eq('user_id', user.id)
+        .maybeSingle()
+    ]);
 
-    if (!memberships || memberships.length === 0) {
+    if (!partnerMembership && !cofMembership) {
       return jsonResponse({ couple: null, cofCouple: null });
     }
 
-    // Identify the partner couple (primary) and the COF couple (secondary).
-    const partnerMembership = memberships.find((m) => m.couple_type === 'partner');
-    const cofMembership = memberships.find((m) => m.couple_type === 'cof');
-
-    const primaryCoupleId = partnerMembership?.couple_id ?? cofMembership?.couple_id ?? null;
+    const primaryCoupleId = partnerMembership?.couple_id ?? cofMembership?.cof_id ?? null;
+    const isPrimaryCof = !partnerMembership && !!cofMembership;
 
     if (!primaryCoupleId) {
       return jsonResponse({ couple: null, cofCouple: null });
@@ -44,26 +49,26 @@ Deno.serve(async (req) => {
     const [{ data: members }, { data: checkins }, { data: events }, { data: activeEmergency }] =
       await Promise.all([
         supabase
-          .from('couple_members')
+          .from(isPrimaryCof ? 'cof_members' : 'couple_members')
           .select('user_id, profiles(id, display_name, avatar_url)')
-          .eq('couple_id', primaryCoupleId),
+          .eq(isPrimaryCof ? 'cof_id' : 'couple_id', primaryCoupleId),
         supabase
           .from('daily_checkins')
           .select('*')
-          .eq('couple_id', primaryCoupleId)
+          .eq(isPrimaryCof ? 'cof_id' : 'couple_id', primaryCoupleId)
           .order('created_at', { ascending: false })
           .limit(20),
         supabase
           .from('calendar_events')
           .select('*')
-          .eq('couple_id', primaryCoupleId)
+          .eq(isPrimaryCof ? 'cof_id' : 'couple_id', primaryCoupleId)
           .gte('start_time', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
           .lt('start_time', new Date(new Date().setHours(23, 59, 59, 999)).toISOString())
           .order('start_time', { ascending: true }),
         supabase
           .from('emergency_events')
           .select('*')
-          .eq('couple_id', primaryCoupleId)
+          .eq(isPrimaryCof ? 'cof_id' : 'couple_id', primaryCoupleId)
           .neq('status', 'resolved')
           .order('created_at', { ascending: false })
           .limit(1)
@@ -79,7 +84,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       couple: partnerMembership?.couples ?? null,
-      cofCouple: cofMembership?.couples ?? null,
+      cofCouple: cofMembership?.cofs ?? null,
       members: members ?? [],
       myLatestCheckin: latestByUser.get(user.id) ?? null,
       partnerLatestCheckin:

@@ -19,22 +19,26 @@ Deno.serve(async (req) => {
 
     if (!user) return errorResponse('Not authenticated', 401);
 
-    const { message, locationNote, latitude, longitude } = await req.json().catch(() => ({}));
+    const { message, locationNote, latitude, longitude, roomId, roomType } = await req.json().catch(() => ({}));
 
-    // --- 1. Get couple membership ---
+    if (!roomId || !roomType) return errorResponse('roomId and roomType are required', 400);
+
+    // --- 1. Verify membership ---
     const { data: membership } = await supabase
-      .from('couple_members')
-      .select('couple_id')
+      .from(roomType === 'cof' ? 'cof_members' : 'couple_members')
+      .select('id')
       .eq('user_id', user.id)
+      .eq(roomType === 'cof' ? 'cof_id' : 'couple_id', roomId)
       .maybeSingle();
 
-    if (!membership) return errorResponse('You are not part of a couple yet', 400);
+    if (!membership) return errorResponse(`You are not part of this ${roomType} space`, 400);
 
     // --- 2. Create the emergency event (in-app alert via Realtime) ---
     const { data: emergency, error } = await supabase
       .from('emergency_events')
       .insert({
-        couple_id: membership.couple_id,
+        couple_id: roomType === 'partner' ? roomId : null,
+        cof_id: roomType === 'cof' ? roomId : null,
         triggered_by: user.id,
         status: 'active',
         message: message ?? null,
@@ -52,14 +56,14 @@ Deno.serve(async (req) => {
       try {
         const admin = adminClient();
 
-        // Get all couple members
+        // Get all members of the room
         const { data: members } = await admin
-          .from('couple_members')
+          .from(roomType === 'cof' ? 'cof_members' : 'couple_members')
           .select('user_id')
-          .eq('couple_id', membership.couple_id);
+          .eq(roomType === 'cof' ? 'cof_id' : 'couple_id', roomId);
 
         const partnerId = members?.find((m) => m.user_id !== user.id)?.user_id;
-        if (!partnerId) return; // solo couple, no partner yet
+        if (!partnerId) return; // solo room, no partner yet
 
         // Get partner auth record for their email
         const { data: { user: partnerUser } } = await admin.auth.admin.getUserById(partnerId);

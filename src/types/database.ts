@@ -44,7 +44,6 @@ export interface RoomMemberSummary {
   user_id: string;
   profiles: Pick<Profile, 'id' | 'display_name' | 'avatar_url'> | null;
 }
-
 export interface Cof {
   id: string;
   name: string;

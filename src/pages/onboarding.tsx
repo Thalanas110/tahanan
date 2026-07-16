@@ -10,8 +10,8 @@ import { toast } from "sonner";
 
 export default function Onboarding() {
   const {
-    createCouple,
-    joinCouple,
+    createPending,
+    joinPending,
     coupleName,
     setCoupleName,
     inviteCode,
@@ -142,8 +142,8 @@ export default function Onboarding() {
                         You'll get an invite code to share with your close friend.
                       </p>
                     </div>
-                    <Button type="submit" className="w-full mt-2" disabled={createCouple.isPending}>
-                      {createCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    <Button type="submit" className="w-full mt-2" disabled={createPending}>
+                      {createPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                       Create COF Space
                     </Button>
                   </form>
@@ -163,8 +163,8 @@ export default function Onboarding() {
                         required
                       />
                     </div>
-                    <Button type="submit" className="w-full mt-2" disabled={joinCouple.isPending}>
-                      {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    <Button type="submit" className="w-full mt-2" disabled={joinPending}>
+                      {joinPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                       Join COF Space
                     </Button>
                   </form>
@@ -209,8 +209,8 @@ export default function Onboarding() {
                     You'll get an invite code to share after creating.
                   </p>
                 </div>
-                <Button type="submit" className="w-full mt-2" disabled={createCouple.isPending}>
-                  {createCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button type="submit" className="w-full mt-2" disabled={createPending}>
+                  {createPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Create & Get Code
                 </Button>
               </form>
@@ -230,8 +230,8 @@ export default function Onboarding() {
                     required
                   />
                 </div>
-                <Button type="submit" className="w-full mt-2" disabled={joinCouple.isPending}>
-                  {joinCouple.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                <Button type="submit" className="w-full mt-2" disabled={joinPending}>
+                  {joinPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                   Join Space
                 </Button>
               </form>

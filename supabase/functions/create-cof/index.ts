@@ -1,15 +1,11 @@
-// POST /functions/v1/create-couple  { name: string; type?: 'partner' | 'cof' }
-// Creates a couple space owned by the caller, generates a 6-character invite
+// POST /functions/v1/create-cof  { name: string }
+// Creates a COF space owned by the caller, generates a 6-character invite
 // code, and adds the caller as its first member.
 //
-// `type` defaults to 'partner' (the original bf/gf space). Pass 'cof' to
-// create a Close/Couple of Friends space. Each user may have at most one
-// couple of each type.
-//
 // All writes use the admin (service-role) client to avoid a circular RLS
-// deadlock: inserting into `couples` with .select() requires a SELECT, but
-// the couples SELECT policy requires is_couple_member() — impossible for a
-// brand-new couple where the creator isn't a member yet.
+// deadlock: inserting into `cofs` with .select() requires a SELECT, but
+// the cofs SELECT policy requires is_cof_member() — impossible for a
+// brand-new cof where the creator isn't a member yet.
 // Identity is verified up front via the user JWT before any writes happen.
 import { adminClient, corsHeaders, errorResponse, jsonResponse, userClient } from '../_shared/client.ts';
 
@@ -43,15 +39,15 @@ Deno.serve(async (req) => {
       return errorResponse('name is required');
     }
 
-    // 2. Check if the user already has a couple space.
+    // 2. Check if the user already has a COF space.
     const { data: existingMembership } = await supabase
-      .from('couple_members')
-      .select('couple_id')
+      .from('cof_members')
+      .select('cof_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (existingMembership) {
-      return errorResponse(`You are already part of a couple space`, 400);
+      return errorResponse(`You are already part of a COF space`, 400);
     }
 
     // 3. All writes go through the admin client to avoid the RLS catch-22.
@@ -61,7 +57,7 @@ Deno.serve(async (req) => {
     let inviteCode = generateInviteCode();
     for (let attempt = 0; attempt < 5; attempt++) {
       const { data: existing } = await admin
-        .from('couples')
+        .from('cofs')
         .select('id')
         .eq('invite_code', inviteCode)
         .maybeSingle();
@@ -69,23 +65,23 @@ Deno.serve(async (req) => {
       inviteCode = generateInviteCode();
     }
 
-    // Insert the couple.
-    const { data: couple, error: coupleError } = await admin
-      .from('couples')
+    // Insert the COF.
+    const { data: cof, error: cofError } = await admin
+      .from('cofs')
       .insert({ name, invite_code: inviteCode, created_by: user.id })
       .select()
       .single();
 
-    if (coupleError) return errorResponse(coupleError.message, 400);
+    if (cofError) return errorResponse(cofError.message, 400);
 
     // Insert the creator as first member.
     const { error: memberError } = await admin
-      .from('couple_members')
-      .insert({ couple_id: couple.id, user_id: user.id, role: 'partner' });
+      .from('cof_members')
+      .insert({ cof_id: cof.id, user_id: user.id, role: 'partner' });
 
     if (memberError) return errorResponse(memberError.message, 400);
 
-    return jsonResponse({ couple });
+    return jsonResponse({ cof });
   } catch (err) {
     return errorResponse(err instanceof Error ? err.message : 'Unknown error', 500);
   }
