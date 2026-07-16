@@ -34,16 +34,35 @@ export function findPendingMonthsaryMessage<
   );
 }
 
+export function findEditableMonthsaryMessage<
+  T extends {
+    created_by: string;
+    completed_at: string | null;
+  },
+>(messages: T[], createdBy: string | null | undefined): T | null {
+  if (!createdBy) {
+    return null;
+  }
+
+  return (
+    messages.find(
+      (message) =>
+        message.created_by === createdBy &&
+        message.completed_at === null,
+    ) ?? null
+  );
+}
+
 export function buildMonthsaryMessageInput(input: {
   coupleId: string;
-  recipientId: string;
+  recipientId?: string | null;
   title?: string;
   body: string;
   targetMonthsaryDate: string;
 }) {
   return {
     couple_id: input.coupleId,
-    recipient_id: input.recipientId,
+    recipient_id: input.recipientId ?? null,
     title: input.title?.trim() ? input.title.trim() : null,
     body: input.body.trim(),
     target_monthsary_date: input.targetMonthsaryDate,
