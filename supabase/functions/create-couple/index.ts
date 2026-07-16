@@ -1,10 +1,9 @@
-// POST /functions/v1/create-couple  { name: string; type?: 'partner' | 'cof' }
+// POST /functions/v1/create-couple  { name: string; relationshipStartDate: string }
 // Creates a couple space owned by the caller, generates a 6-character invite
 // code, and adds the caller as its first member.
 //
-// `type` defaults to 'partner' (the original bf/gf space). Pass 'cof' to
-// create a Close/Couple of Friends space. Each user may have at most one
-// couple of each type.
+// The caller must provide the relationship start date so the app can derive
+// recurring monthsary dates without a separate setup flow.
 //
 // All writes use the admin (service-role) client to avoid a circular RLS
 // deadlock: inserting into `couples` with .select() requires a SELECT, but
@@ -37,10 +36,18 @@ Deno.serve(async (req) => {
     if (!user) return errorResponse('Not authenticated', 401);
 
     const body = await req.json();
-    const { name } = body;
+    const { name, relationshipStartDate } = body;
 
     if (!name || typeof name !== 'string') {
       return errorResponse('name is required');
+    }
+
+    if (!relationshipStartDate || typeof relationshipStartDate !== 'string') {
+      return errorResponse('relationshipStartDate is required');
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(relationshipStartDate)) {
+      return errorResponse('relationshipStartDate must be YYYY-MM-DD');
     }
 
     // 2. Check if the user already has a couple space.
@@ -72,7 +79,12 @@ Deno.serve(async (req) => {
     // Insert the couple.
     const { data: couple, error: coupleError } = await admin
       .from('couples')
-      .insert({ name, invite_code: inviteCode, created_by: user.id })
+      .insert({
+        name,
+        invite_code: inviteCode,
+        created_by: user.id,
+        relationship_start_date: relationshipStartDate,
+      })
       .select()
       .single();
 

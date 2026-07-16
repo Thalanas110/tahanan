@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { buildUpdateCouplePatch } from '@/lib/coupleDraft';
 import { invokeEdgeFunction } from '@/lib/supabase';
 import type { Couple, DailyCheckin, CalendarEvent, EmergencyEvent, Profile, CoupleType, Cof, CofMember } from '@/types/database';
 
@@ -26,8 +27,11 @@ export function useDashboard(enabled = true) {
 export function useCreateCouple() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ name, type = 'partner' }: { name: string; type?: CoupleType }) =>
-      invokeEdgeFunction<{ couple: Couple }>('create-couple', { name, type }),
+    mutationFn: ({ name, relationshipStartDate }: { name: string; relationshipStartDate: string }) =>
+      invokeEdgeFunction<{ couple: Couple }>('create-couple', {
+        name,
+        relationshipStartDate,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: dashboardQueryKey }),
   });
 }
@@ -47,12 +51,20 @@ export function useJoinCouple() {
 export function useUpdateCouple() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ coupleId, name }: { coupleId: string; name: string }) => {
+    mutationFn: async ({
+      coupleId,
+      name,
+      relationshipStartDate,
+    }: {
+      coupleId: string;
+      name?: string;
+      relationshipStartDate?: string;
+    }) => {
       // Import supabase client dynamically to avoid circular dependencies if any
       const { supabase } = await import('@/lib/supabase');
       const { data, error } = await supabase
         .from('couples')
-        .update({ name })
+        .update(buildUpdateCouplePatch({ name, relationshipStartDate }))
         .eq('id', coupleId)
         .select()
         .single();

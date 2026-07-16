@@ -4,6 +4,7 @@ import { useCreateCouple, useJoinCouple, useDashboard } from "@/hooks/useCouple"
 import { useCreateCof, useJoinCof } from "@/hooks/useCof";
 import { useMyRooms } from "@/hooks/useMyRooms";
 import { resolveAvailableRooms } from "@/context/activeRoomState";
+import { buildCreateCoupleInput } from "@/lib/coupleDraft";
 import { toast } from "sonner";
 
 export function useOnboardingLogic() {
@@ -25,6 +26,7 @@ export function useOnboardingLogic() {
   const hasCofCouple = !!availableRooms.cofRoom;
 
   const [coupleName, setCoupleName] = useState("");
+  const [relationshipStartDate, setRelationshipStartDate] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
   const [createdInviteCode, setCreatedInviteCode] = useState<string | null>(null);
@@ -33,8 +35,10 @@ export function useOnboardingLogic() {
     e.preventDefault();
     if (!coupleName.trim()) return;
 
-    // When the user already has a partner couple, always create a COF room.
-    const type = hasPartnerCouple ? "cof" : "partner";
+    if (!hasPartnerCouple && !relationshipStartDate) {
+      toast.error("Please choose your relationship start date");
+      return;
+    }
 
     try {
       if (hasPartnerCouple) {
@@ -42,7 +46,12 @@ export function useOnboardingLogic() {
         setCreatedInviteCode(res.cof.invite_code);
         toast.success("COF space created! Share your code.");
       } else {
-        const res = await createCouple.mutateAsync({ name: coupleName });
+        const res = await createCouple.mutateAsync(
+          buildCreateCoupleInput({
+            name: coupleName,
+            relationshipStartDate,
+          }),
+        );
         setCreatedInviteCode(res.couple.invite_code);
         toast.success("Space created! Share your code.");
       }
@@ -81,6 +90,8 @@ export function useOnboardingLogic() {
     joinPending: joinCouple.isPending || joinCof.isPending,
     coupleName,
     setCoupleName,
+    relationshipStartDate,
+    setRelationshipStartDate,
     inviteCode,
     setInviteCode,
     createdInviteCode,

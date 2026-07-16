@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const [{ data: partnerMembership }, { data: cofMembership }] = await Promise.all([
       supabase
         .from('couple_members')
-        .select('couple_id, couples(id, name, invite_code, created_by, created_at)')
+        .select('couple_id, couples(id, name, invite_code, created_by, relationship_start_date, created_at)')
         .eq('user_id', user.id)
         .maybeSingle(),
       supabase

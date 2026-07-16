@@ -14,6 +14,8 @@ export default function Onboarding() {
     joinPending,
     coupleName,
     setCoupleName,
+    relationshipStartDate,
+    setRelationshipStartDate,
     inviteCode,
     setInviteCode,
     createdInviteCode,
@@ -207,6 +209,19 @@ export default function Onboarding() {
                   />
                   <p className="text-xs text-muted-foreground">
                     You'll get an invite code to share after creating.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="relationshipStartDate">Relationship start date</Label>
+                  <Input
+                    id="relationshipStartDate"
+                    type="date"
+                    value={relationshipStartDate}
+                    onChange={(e) => setRelationshipStartDate(e.target.value)}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This date is used to calculate your recurring monthsary.
                   </p>
                 </div>
                 <Button type="submit" className="w-full mt-2" disabled={createPending}>

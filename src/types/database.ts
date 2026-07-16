@@ -29,6 +29,7 @@ export interface Couple {
   name: string;
   invite_code: string | null;
   created_by: string;
+  relationship_start_date: string | null;
   created_at: string;
 }
 
@@ -104,6 +105,18 @@ export interface LoveNote {
   created_at: string;
 }
 
+export interface MonthsaryMessage {
+  id: string;
+  couple_id: string;
+  created_by: string;
+  recipient_id: string;
+  title: string | null;
+  body: string;
+  target_monthsary_date: string;
+  completed_at: string | null;
+  created_at: string;
+}
+
 export interface HealthNote {
   id: string;
   couple_id: string | null;
@@ -170,6 +183,11 @@ export interface Database {
       daily_checkins: { Row: DailyCheckin; Insert: Partial<DailyCheckin>; Update: Partial<DailyCheckin> };
       calendar_events: { Row: CalendarEvent; Insert: Partial<CalendarEvent>; Update: Partial<CalendarEvent> };
       love_notes: { Row: LoveNote; Insert: Partial<LoveNote>; Update: Partial<LoveNote> };
+      monthsary_messages: {
+        Row: MonthsaryMessage;
+        Insert: Partial<MonthsaryMessage>;
+        Update: Partial<MonthsaryMessage>;
+      };
       health_notes: { Row: HealthNote; Insert: Partial<HealthNote>; Update: Partial<HealthNote> };
       tasks: { Row: Task; Insert: Partial<Task>; Update: Partial<Task> };
       emergency_events: { Row: EmergencyEvent; Insert: Partial<EmergencyEvent>; Update: Partial<EmergencyEvent> };

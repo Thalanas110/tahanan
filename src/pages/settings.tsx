@@ -20,6 +20,11 @@ export default function Settings() {
     newName,
     setNewName,
     handleSaveName,
+    isEditingRelationshipStartDate,
+    setIsEditingRelationshipStartDate,
+    relationshipStartDateDraft,
+    setRelationshipStartDateDraft,
+    handleSaveRelationshipStartDate,
     updateCouple,
     isEditingProfileName,
     setIsEditingProfileName,
@@ -156,6 +161,55 @@ export default function Settings() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Partner</p>
               <p className="text-lg">{partnerProfile?.display_name || "Unknown"}</p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-muted-foreground">Relationship Start Date</p>
+              {isEditingRelationshipStartDate ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="date"
+                    value={relationshipStartDateDraft}
+                    onChange={(e) => setRelationshipStartDateDraft(e.target.value)}
+                    className="max-w-[250px]"
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={handleSaveRelationshipStartDate}
+                    disabled={updateCouple.isPending}
+                  >
+                    <Check className="w-4 h-4 text-green-500" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => setIsEditingRelationshipStartDate(false)}
+                    disabled={updateCouple.isPending}
+                  >
+                    <X className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <p className="text-lg">
+                    {couple.relationship_start_date
+                      ? format(
+                          new Date(`${couple.relationship_start_date}T12:00:00`),
+                          "MMMM d, yyyy",
+                        )
+                      : "Not set"}
+                  </p>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={() => setIsEditingRelationshipStartDate(true)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
