@@ -7,10 +7,17 @@ import {
 } from "react";
 import { useDashboard } from "@/hooks/useCouple";
 import type { CoupleType } from "@/types/database";
+import {
+  ACTIVE_ROOM_SESSION_KEY,
+  readStoredRoomType,
+  resolveActiveRoomState,
+} from "./activeRoomState";
 
 interface ActiveRoomCtx {
   /** The couple_id of the currently active room. */
   activeRoomId: string | null;
+  /** Name of the currently active room, if available. */
+  activeRoomName: string | null;
   /** Type of the currently active room ('partner' or 'cof'). */
   activeRoomType: CoupleType;
   /** true when the user has a COF room. */
@@ -21,45 +28,52 @@ interface ActiveRoomCtx {
 
 const ActiveRoomContext = createContext<ActiveRoomCtx>({
   activeRoomId: null,
+  activeRoomName: null,
   activeRoomType: "partner",
   hasCof: false,
   switchRoom: () => {},
 });
 
-const SESSION_KEY = "tahanan_active_room";
-
 export function ActiveRoomProvider({ children }: { children: ReactNode }) {
   const { data: dashboard } = useDashboard();
 
-  const partnerRoomId = dashboard?.couple?.id ?? null;
-  const cofRoomId = dashboard?.cofCouple?.id ?? null;
-  const hasCof = !!cofRoomId;
-
   // Persist last-chosen room in sessionStorage so a page reload keeps the selection.
   const [activeType, setActiveType] = useState<CoupleType>(() => {
-    const stored = sessionStorage.getItem(SESSION_KEY);
-    return stored === "cof" ? "cof" : "partner";
+    return readStoredRoomType(typeof window === "undefined" ? null : sessionStorage);
+  });
+
+  const roomState = resolveActiveRoomState({
+    storedType: activeType,
+    partnerRoom: dashboard?.couple
+      ? { id: dashboard.couple.id, name: dashboard.couple.name }
+      : null,
+    cofRoom: dashboard?.cofCouple
+      ? { id: dashboard.cofCouple.id, name: dashboard.cofCouple.name }
+      : null,
   });
 
   // If the user switches to COF but loses the COF room, fall back to partner.
   useEffect(() => {
-    if (activeType === "cof" && !cofRoomId) {
+    if (activeType === "cof" && !roomState.hasCof) {
       setActiveType("partner");
-      sessionStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(ACTIVE_ROOM_SESSION_KEY);
     }
-  }, [activeType, cofRoomId]);
+  }, [activeType, roomState.hasCof]);
 
   const switchRoom = (type: CoupleType) => {
     setActiveType(type);
-    sessionStorage.setItem(SESSION_KEY, type);
+    sessionStorage.setItem(ACTIVE_ROOM_SESSION_KEY, type);
   };
-
-  const activeRoomId =
-    activeType === "cof" ? cofRoomId : partnerRoomId;
 
   return (
     <ActiveRoomContext.Provider
-      value={{ activeRoomId, activeRoomType: activeType, hasCof, switchRoom }}
+      value={{
+        activeRoomId: roomState.activeRoomId,
+        activeRoomName: roomState.activeRoomName,
+        activeRoomType: roomState.activeRoomType,
+        hasCof: roomState.hasCof,
+        switchRoom,
+      }}
     >
       {children}
     </ActiveRoomContext.Provider>
