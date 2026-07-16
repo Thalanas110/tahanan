@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useDashboard } from "@/hooks/useCouple";
 import { useLoveNotes, useCreateLoveNote, useToggleFavoriteLoveNote, useDeleteLoveNote, useUpdateLoveNote } from "@/hooks/useLoveNotes";
+import { useCreateMonthsaryMessage, useMonthsaryMessages, useUpdateMonthsaryMessage } from "@/hooks/useMonthsaryMessages";
 import { toast } from "sonner";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 import { useRoomMembers } from "@/hooks/useRoomMembers";
+import { type MonthsaryMessage } from "@/types/database";
 import { getPartnerMember } from "@/lib/roomParticipants";
 import { buildCreateLoveNoteInput } from "@/lib/loveNoteDraft";
+import {
+  buildMonthsaryMessageInput,
+  findPendingMonthsaryMessage,
+  getMonthsaryComposerTarget,
+} from "@/lib/monthsaryMessageDraft";
 
 export function useLoveNotesLogic() {
   const { activeRoomId, activeRoomType } = useActiveRoom();
+  const { data: dashboard } = useDashboard();
   const { data: notes, isLoading } = useLoveNotes(activeRoomId, activeRoomType);
   const { data: roomMembers = [] } = useRoomMembers(activeRoomId, activeRoomType);
   const createNote = useCreateLoveNote();
   const updateNote = useUpdateLoveNote();
   const toggleFavorite = useToggleFavoriteLoveNote();
   const deleteNote = useDeleteLoveNote();
+  const createMonthsaryMessage = useCreateMonthsaryMessage();
+  const updateMonthsaryMessage = useUpdateMonthsaryMessage();
   const { user } = useAuth();
   
   const [isWriting, setIsWriting] = useState(false);
@@ -22,6 +33,8 @@ export function useLoveNotesLogic() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [openWhen, setOpenWhen] = useState("");
+  const [monthsaryTitle, setMonthsaryTitle] = useState("");
+  const [monthsaryBody, setMonthsaryBody] = useState("");
 
   const resetForm = () => {
     setIsWriting(false);
@@ -42,6 +55,26 @@ export function useLoveNotesLogic() {
   const partnerMember = getPartnerMember(roomMembers, user?.id);
   const partnerId = partnerMember?.user_id;
   const partnerName = partnerMember?.profiles?.display_name || "Partner";
+  const relationshipStartDate =
+    activeRoomType === "partner" ? dashboard?.couple?.relationship_start_date ?? null : null;
+  const targetMonthsaryDate = getMonthsaryComposerTarget({
+    roomType: activeRoomType,
+    relationshipStartDate,
+  });
+  const { data: monthsaryMessages = [] } = useMonthsaryMessages(
+    activeRoomType === "partner" ? activeRoomId : null,
+    activeRoomType === "partner",
+  );
+  const pendingMonthsaryMessage = findPendingMonthsaryMessage(
+    monthsaryMessages,
+    partnerId,
+    targetMonthsaryDate,
+  );
+
+  useEffect(() => {
+    setMonthsaryTitle(pendingMonthsaryMessage?.title ?? "");
+    setMonthsaryBody(pendingMonthsaryMessage?.body ?? "");
+  }, [pendingMonthsaryMessage?.id, pendingMonthsaryMessage?.title, pendingMonthsaryMessage?.body]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,6 +108,44 @@ export function useLoveNotesLogic() {
     }
   }
 
+  async function handleMonthsarySubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (
+      activeRoomType !== "partner" ||
+      !activeRoomId ||
+      !partnerId ||
+      !targetMonthsaryDate ||
+      !monthsaryBody.trim()
+    ) {
+      return;
+    }
+
+    const payload = buildMonthsaryMessageInput({
+      coupleId: activeRoomId,
+      recipientId: partnerId,
+      title: monthsaryTitle,
+      body: monthsaryBody,
+      targetMonthsaryDate,
+    });
+
+    try {
+      if (pendingMonthsaryMessage) {
+        await updateMonthsaryMessage.mutateAsync({
+          id: pendingMonthsaryMessage.id,
+          title: payload.title,
+          body: payload.body,
+        });
+        toast.success("Monthsary message updated");
+      } else {
+        await createMonthsaryMessage.mutateAsync(payload);
+        toast.success("Monthsary message saved");
+      }
+    } catch (error) {
+      toast.error(pendingMonthsaryMessage ? "Failed to update monthsary message" : "Failed to save monthsary message");
+    }
+  }
+
   const sortedNotes = notes ? [...notes].sort((a, b) => {
     if (a.is_favorite === b.is_favorite) {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
@@ -89,6 +160,7 @@ export function useLoveNotesLogic() {
     toggleFavorite,
     deleteNote,
     user,
+    activeRoomType,
     isWriting,
     setIsWriting: (val: boolean) => {
       if (!val) resetForm();
@@ -103,7 +175,17 @@ export function useLoveNotesLogic() {
     setOpenWhen,
     partnerId,
     partnerName,
+    relationshipStartDate,
+    targetMonthsaryDate,
+    monthsaryTitle,
+    setMonthsaryTitle,
+    monthsaryBody,
+    setMonthsaryBody,
+    pendingMonthsaryMessage,
+    createMonthsaryMessage,
+    updateMonthsaryMessage,
     handleSubmit,
+    handleMonthsarySubmit,
     handleEdit,
     sortedNotes,
   };

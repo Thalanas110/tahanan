@@ -29,6 +29,7 @@ export default function LoveNotes() {
     deleteNote,
     updateNote,
     user,
+    activeRoomType,
     isWriting,
     setIsWriting,
     editingId,
@@ -39,7 +40,17 @@ export default function LoveNotes() {
     openWhen,
     setOpenWhen,
     partnerName,
+    relationshipStartDate,
+    targetMonthsaryDate,
+    monthsaryTitle,
+    setMonthsaryTitle,
+    monthsaryBody,
+    setMonthsaryBody,
+    pendingMonthsaryMessage,
+    createMonthsaryMessage,
+    updateMonthsaryMessage,
     handleSubmit,
+    handleMonthsarySubmit,
     handleEdit,
     sortedNotes,
   } = useLoveNotesLogic();
@@ -59,6 +70,52 @@ export default function LoveNotes() {
           </Button>
         )}
       </header>
+
+      {activeRoomType === "partner" && (
+        <Card className="border-primary/20 bg-primary/5 shadow-md">
+          <CardHeader>
+            <CardTitle className="font-serif text-primary">Next Monthsary Message</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              {relationshipStartDate && targetMonthsaryDate
+                ? `This message will open on ${format(new Date(`${targetMonthsaryDate}T12:00:00`), "MMMM d, yyyy")}.`
+                : "Add your relationship start date in Settings to unlock monthsary messages."}
+            </p>
+          </CardHeader>
+          <CardContent>
+            {relationshipStartDate && targetMonthsaryDate ? (
+              <form onSubmit={handleMonthsarySubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Title (optional)</Label>
+                  <Input
+                    placeholder="Happy monthsary"
+                    value={monthsaryTitle}
+                    onChange={(e) => setMonthsaryTitle(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Message</Label>
+                  <Textarea
+                    value={monthsaryBody}
+                    onChange={(e) => setMonthsaryBody(e.target.value)}
+                    className="min-h-[160px] resize-none font-serif text-lg leading-relaxed"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={createMonthsaryMessage.isPending || updateMonthsaryMessage.isPending}
+                >
+                  {(createMonthsaryMessage.isPending || updateMonthsaryMessage.isPending) && (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  )}
+                  {pendingMonthsaryMessage ? "Update Monthsary Message" : "Save Monthsary Message"}
+                </Button>
+              </form>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
 
       {isWriting && (
         <Card className="border-accent/20 bg-accent/5 shadow-md">
