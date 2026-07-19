@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
+import { useCallback, useEffect, useMemo, useState, type UIEvent } from 'react';
 import { toast } from 'sonner';
 import { useActiveRoom } from '@/context/ActiveRoomContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,7 +29,10 @@ export function useMonthsaryMessageDialogLogic() {
   const [now, setNow] = useState(() => Date.now());
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const messageContentRef = useRef<HTMLDivElement>(null);
+  const [messageContentElement, setMessageContentElement] = useState<HTMLDivElement | null>(null);
+  const messageContentRef = useCallback((element: HTMLDivElement | null) => {
+    setMessageContentElement(element);
+  }, []);
 
   const dueMessage = useMemo(
     () =>
@@ -49,18 +52,9 @@ export function useMonthsaryMessageDialogLogic() {
     if (!activeMessage) return;
 
     const opened = Date.now();
-    const contentElement = messageContentRef.current;
     setOpenedAt(opened);
     setNow(opened);
-    setHasReachedBottom(
-      contentElement
-        ? hasReachedMonthsaryMessageBottom({
-            scrollTop: contentElement.scrollTop,
-            clientHeight: contentElement.clientHeight,
-            scrollHeight: contentElement.scrollHeight,
-          })
-        : false,
-    );
+    setHasReachedBottom(false);
     setErrorMessage(null);
 
     const intervalId = window.setInterval(() => {
@@ -69,6 +63,18 @@ export function useMonthsaryMessageDialogLogic() {
 
     return () => window.clearInterval(intervalId);
   }, [activeMessage?.id]);
+
+  useEffect(() => {
+    if (!activeMessage || !messageContentElement) return;
+
+    setHasReachedBottom(
+      hasReachedMonthsaryMessageBottom({
+        scrollTop: messageContentElement.scrollTop,
+        clientHeight: messageContentElement.clientHeight,
+        scrollHeight: messageContentElement.scrollHeight,
+      }),
+    );
+  }, [activeMessage?.id, messageContentElement]);
 
   const canClose = canDismissMonthsaryMessage({
     openedAt,
