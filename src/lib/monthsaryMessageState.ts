@@ -1,3 +1,15 @@
+export function hasReachedMonthsaryMessageBottom(input: {
+  scrollTop: number;
+  clientHeight: number;
+  scrollHeight: number;
+  tolerancePx?: number;
+}): boolean {
+  return (
+    input.scrollTop + input.clientHeight >=
+    input.scrollHeight - (input.tolerancePx ?? 8)
+  );
+}
+
 export function canDismissMonthsaryMessage(input: {
   openedAt: number | null;
   now: number;

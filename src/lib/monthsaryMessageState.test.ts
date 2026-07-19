@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { canDismissMonthsaryMessage } from './monthsaryMessageState.ts';
+import {
+  canDismissMonthsaryMessage,
+  hasReachedMonthsaryMessageBottom,
+} from './monthsaryMessageState.ts';
 
 test('canDismissMonthsaryMessage stays locked before ten seconds', () => {
   assert.equal(
@@ -31,6 +34,36 @@ test('canDismissMonthsaryMessage unlocks only after both conditions are met', ()
       openedAt: 0,
       now: 12_000,
       hasReachedBottom: true,
+    }),
+    true,
+  );
+});
+
+test('hasReachedMonthsaryMessageBottom treats a message with no overflow as already read', () => {
+  assert.equal(
+    hasReachedMonthsaryMessageBottom({
+      scrollTop: 0,
+      clientHeight: 240,
+      scrollHeight: 240,
+    }),
+    true,
+  );
+});
+
+test('hasReachedMonthsaryMessageBottom stays false until an overflowing message reaches its bottom', () => {
+  assert.equal(
+    hasReachedMonthsaryMessageBottom({
+      scrollTop: 0,
+      clientHeight: 240,
+      scrollHeight: 600,
+    }),
+    false,
+  );
+  assert.equal(
+    hasReachedMonthsaryMessageBottom({
+      scrollTop: 352,
+      clientHeight: 240,
+      scrollHeight: 600,
     }),
     true,
   );
