@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type UIEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type UIEvent } from 'react';
 import { toast } from 'sonner';
 import { useActiveRoom } from '@/context/ActiveRoomContext';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,7 +7,10 @@ import {
   useMonthsaryMessages,
 } from '@/hooks/useMonthsaryMessages';
 import { findDueMonthsaryMessage } from '@/lib/monthsaryMessageDelivery';
-import { canDismissMonthsaryMessage } from '@/lib/monthsaryMessageState';
+import {
+  canDismissMonthsaryMessage,
+  hasReachedMonthsaryMessageBottom,
+} from '@/lib/monthsaryMessageState';
 import type { MonthsaryMessage } from '@/types/database';
 
 export function useMonthsaryMessageDialogLogic() {
@@ -26,6 +29,7 @@ export function useMonthsaryMessageDialogLogic() {
   const [now, setNow] = useState(() => Date.now());
   const [hasReachedBottom, setHasReachedBottom] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const messageContentRef = useRef<HTMLDivElement>(null);
 
   const dueMessage = useMemo(
     () =>
@@ -45,9 +49,18 @@ export function useMonthsaryMessageDialogLogic() {
     if (!activeMessage) return;
 
     const opened = Date.now();
+    const contentElement = messageContentRef.current;
     setOpenedAt(opened);
     setNow(opened);
-    setHasReachedBottom(false);
+    setHasReachedBottom(
+      contentElement
+        ? hasReachedMonthsaryMessageBottom({
+            scrollTop: contentElement.scrollTop,
+            clientHeight: contentElement.clientHeight,
+            scrollHeight: contentElement.scrollHeight,
+          })
+        : false,
+    );
     setErrorMessage(null);
 
     const intervalId = window.setInterval(() => {
@@ -68,9 +81,13 @@ export function useMonthsaryMessageDialogLogic() {
 
   function handleScroll(event: UIEvent<HTMLDivElement>) {
     const element = event.currentTarget;
-    const reachedBottom =
-      element.scrollTop + element.clientHeight >= element.scrollHeight - 8;
-    if (reachedBottom) {
+    if (
+      hasReachedMonthsaryMessageBottom({
+        scrollTop: element.scrollTop,
+        clientHeight: element.clientHeight,
+        scrollHeight: element.scrollHeight,
+      })
+    ) {
       setHasReachedBottom(true);
     }
   }
@@ -99,6 +116,7 @@ export function useMonthsaryMessageDialogLogic() {
     errorMessage,
     hasReachedBottom,
     secondsRemaining,
+    messageContentRef,
     handleScroll,
     handleClose,
   };

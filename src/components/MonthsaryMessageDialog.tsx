@@ -10,6 +10,7 @@ export function MonthsaryMessageDialog() {
     errorMessage,
     hasReachedBottom,
     secondsRemaining,
+    messageContentRef,
     handleScroll,
     handleClose,
   } = useMonthsaryMessageDialogLogic();
@@ -30,6 +31,7 @@ export function MonthsaryMessageDialog() {
         </DialogHeader>
 
         <div
+          ref={messageContentRef}
           className="max-h-[55vh] overflow-y-auto rounded-lg border border-border/60 bg-muted/30 p-5"
           onScroll={handleScroll}
         >
