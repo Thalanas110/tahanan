@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const writer = readFileSync(
@@ -9,6 +9,10 @@ const writer = readFileSync(
 const reader = readFileSync(
   new URL('./get-dass-monitoring-history/index.ts', import.meta.url),
   'utf8',
+);
+const backfillWriterPath = new URL(
+  './backfill-dass-monitoring-entry/index.ts',
+  import.meta.url,
 );
 
 test('DASS writer verifies authenticated partner-couple membership before encrypting', () => {
@@ -33,4 +37,37 @@ test('DASS reader proves caller membership before decrypting history', () => {
   assert.match(reader, /rpc\(\s*'dass_monitoring_get_kek'/);
   assert.match(reader, /decryptDassScores/);
   assert.doesNotMatch(reader, /cofId|roomType|recipientId|responses|answers/);
+});
+
+test('DASS backfill writer accepts only encrypted scores from its authenticated author', () => {
+  assert.equal(
+    existsSync(backfillWriterPath),
+    true,
+    'expected the temporary DASS backfill Edge Function',
+  );
+
+  const backfillWriter = readFileSync(backfillWriterPath, 'utf8');
+  assert.match(backfillWriter, /userClient\(req\)/);
+  assert.match(backfillWriter, /parseBackfillDassBody\(await req\.json\(\)\)/);
+  assert.match(
+    backfillWriter,
+    /from\('couple_members'\)[\s\S]*eq\('couple_id', coupleId\)[\s\S]*eq\('user_id', user\.id\)/,
+  );
+  assert.match(backfillWriter, /rpc\(\s*'dass_monitoring_get_kek'/);
+  assert.match(backfillWriter, /encryptDassScores\(scores/);
+  assert.match(backfillWriter, /taken_at:\s*takenAt\.toISOString\(\)/);
+  assert.match(backfillWriter, /insertError\?\.code === '23P01'/);
+  assert.doesNotMatch(
+    backfillWriter,
+    /cofId|roomType|responses|answers|userId|encryptionKey/,
+  );
+});
+
+test('DASS endpoints return and order entries by their assessment timestamp', () => {
+  assert.match(writer, /id, submitted_by, taken_at/);
+  assert.match(writer, /takenAt:\s*row\.taken_at/);
+  assert.doesNotMatch(writer, /createdAt/);
+  assert.match(reader, /taken_at/);
+  assert.match(reader, /order\('taken_at', \{ ascending: true \}\)/);
+  assert.match(reader, /takenAt:\s*row\.taken_at/);
 });

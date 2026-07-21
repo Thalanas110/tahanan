@@ -7,6 +7,7 @@ import {
   getOverallDassStatus,
   serializeDassCsv,
 } from './dassReports.ts';
+import * as dassReports from './dassReports.ts';
 
 test('overall status uses the highest severity across all DASS scales', () => {
   assert.equal(
@@ -25,7 +26,7 @@ test('report rows contain only a taken date, final scores, and overall status', 
       {
         id: 'entry-1',
         submittedBy: 'person-1',
-        createdAt: '2026-07-21T06:00:00.000Z',
+        takenAt: '2026-01-04T16:00:00.000Z',
         depression: 10,
         anxiety: 8,
         stress: 16,
@@ -33,13 +34,42 @@ test('report rows contain only a taken date, final scores, and overall status', 
     ]),
     [
       {
-        dateTaken: '2026-07-21T06:00:00.000Z',
+        dateTaken: '2026-01-05',
         depression: 10,
         anxiety: 8,
         stress: 16,
         overallStatus: 'Mild',
       },
     ],
+  );
+});
+
+test('report dates keep the Manila assessment day for charts and exports', () => {
+  const formatDassTakenDate = (
+    dassReports as unknown as {
+      formatDassTakenDate?: (takenAt: string) => string;
+    }
+  ).formatDassTakenDate;
+
+  assert.equal(typeof formatDassTakenDate, 'function');
+  if (!formatDassTakenDate) return;
+
+  assert.equal(
+    formatDassTakenDate('2026-01-04T16:00:00.000Z'),
+    'Jan 5',
+  );
+
+  const getDassTakenDate = (
+    dassReports as unknown as {
+      getDassTakenDate?: (value: string | Date) => string;
+    }
+  ).getDassTakenDate;
+  assert.equal(typeof getDassTakenDate, 'function');
+  if (!getDassTakenDate) return;
+
+  assert.equal(
+    getDassTakenDate(new Date('2026-01-04T16:00:00.000Z')),
+    '2026-01-05',
   );
 });
 

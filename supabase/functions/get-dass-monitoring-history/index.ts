@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
     const { data: rows, error: rowsError } = await admin
       .from('dass_monitoring_entries')
       .select(
-        'id, couple_id, submitted_by, ciphertext, ciphertext_iv, wrapped_data_key, wrapped_data_key_iv, key_version, created_at',
+        'id, couple_id, submitted_by, ciphertext, ciphertext_iv, wrapped_data_key, wrapped_data_key_iv, key_version, taken_at',
       )
       .eq('couple_id', coupleId)
-      .order('created_at', { ascending: true });
+      .order('taken_at', { ascending: true });
     if (rowsError) return errorResponse('Could not load DASS-21 monitoring history', 500);
 
     const entries = await Promise.all(
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         return {
           id: row.id,
           submittedBy: row.submitted_by,
-          createdAt: row.created_at,
+          takenAt: row.taken_at,
           ...scores,
         };
       }),
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       entries,
       nextEligibleAt: latestMine
-        ? getNextEligibleAt(latestMine.createdAt).toISOString()
+        ? getNextEligibleAt(latestMine.takenAt).toISOString()
         : null,
     });
   } catch {

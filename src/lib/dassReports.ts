@@ -18,6 +18,38 @@ const severityOrder: DassSeverity[] = [
   'Extremely Severe',
 ];
 
+function toDassDate(value: string | Date): Date {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) {
+    throw new Error('Invalid DASS assessment timestamp');
+  }
+  return date;
+}
+
+export function getDassTakenDate(value: string | Date): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(toDassDate(value));
+  const part = (type: 'year' | 'month' | 'day') => {
+    const result = parts.find((candidate) => candidate.type === type)?.value;
+    if (!result) throw new Error('Could not format DASS assessment date');
+    return result;
+  };
+
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+export function formatDassTakenDate(value: string | Date): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    month: 'short',
+    day: 'numeric',
+  }).format(toDassDate(value));
+}
+
 export function getOverallDassStatus(scores: DassScores): DassSeverity {
   return (['depression', 'anxiety', 'stress'] as const)
     .map((scale) => getDassSeverity(scale, scores[scale]))
@@ -31,8 +63,8 @@ export function getOverallDassStatus(scores: DassScores): DassSeverity {
 export function buildDassReportRows(
   entries: readonly DassMonitoringEntry[],
 ): DassReportRow[] {
-  return entries.map(({ createdAt, depression, anxiety, stress }) => ({
-    dateTaken: createdAt,
+  return entries.map(({ takenAt, depression, anxiety, stress }) => ({
+    dateTaken: getDassTakenDate(takenAt),
     depression,
     anxiety,
     stress,

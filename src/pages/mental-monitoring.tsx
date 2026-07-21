@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useActiveRoom } from '@/context/ActiveRoomContext';
@@ -31,10 +32,13 @@ import {
   getDassSeverity,
   type DassResponse,
   type DassScale,
+  type DassScores,
 } from '@/lib/dass21';
 import { getDassPdfBlob } from '@/lib/dassPdfReport';
 import {
   buildDassReportRows,
+  formatDassTakenDate,
+  getDassTakenDate,
   getDassReportFilename,
   serializeDassCsv,
 } from '@/lib/dassReports';
@@ -85,12 +89,14 @@ export default function MentalMonitoring() {
   const isPartnerSpace = activeRoomType === 'partner';
   const partnerCoupleId = isPartnerSpace ? activeRoomId : null;
   const { data: roomMembers = [] } = useRoomMembers(partnerCoupleId, 'partner');
-  const { historyQuery, createEntry } = useDassMonitoring(
+  const { historyQuery, createEntry, backfillEntry } = useDassMonitoring(
     partnerCoupleId,
     isPartnerSpace,
   );
   const [isAssessmentOpen, setIsAssessmentOpen] = useState(false);
   const [selections, setSelections] = useState<Partial<Record<number, DassResponse>>>({});
+  const [backfillTakenOn, setBackfillTakenOn] = useState('');
+  const [backfillScores, setBackfillScores] = useState<Partial<DassScores>>({});
 
   const memberIds = roomMembers.map((member) => member.user_id);
   const visibleEntries = entriesVisibleInPartnerSpace(
@@ -100,7 +106,7 @@ export default function MentalMonitoring() {
   const chartData = useMemo(
     () =>
       visibleEntries.map((entry) => ({
-        date: format(new Date(entry.createdAt), 'MMM d'),
+        date: formatDassTakenDate(entry.takenAt),
         depression: entry.depression,
         anxiety: entry.anxiety,
         stress: entry.stress,
@@ -123,6 +129,18 @@ export default function MentalMonitoring() {
   const isComplete = DASS_21_QUESTIONS.every(
     (question) => selections[question.number] !== undefined,
   );
+  const isBackfillComplete =
+    /^\d{4}-\d{2}-\d{2}$/.test(backfillTakenOn) &&
+    (['depression', 'anxiety', 'stress'] as const).every((scale) => {
+      const score = backfillScores[scale];
+      return (
+        Number.isInteger(score) &&
+        score !== undefined &&
+        score >= 0 &&
+        score <= 42 &&
+        score % 2 === 0
+      );
+    });
   const partnerName = getPartnerMember(roomMembers, user?.id)?.profiles?.display_name;
 
   const updateSelection = (questionNumber: number, value: string) => {
@@ -149,6 +167,35 @@ export default function MentalMonitoring() {
         error instanceof Error
           ? error.message
           : 'Could not save DASS-21 monitoring scores.',
+      );
+    }
+  };
+
+  const updateBackfillScore = (scale: DassScale, value: string) => {
+    setBackfillScores((current) => ({
+      ...current,
+      [scale]: value === '' ? undefined : Number(value),
+    }));
+  };
+
+  const submitBackfill = async () => {
+    if (!isBackfillComplete) return;
+
+    try {
+      await backfillEntry.mutateAsync({
+        takenOn: backfillTakenOn,
+        depression: backfillScores.depression!,
+        anxiety: backfillScores.anxiety!,
+        stress: backfillScores.stress!,
+      });
+      setBackfillTakenOn('');
+      setBackfillScores({});
+      toast.success('Historical DASS-21 monitoring scores have been saved.');
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Could not save historical DASS-21 monitoring scores.',
       );
     }
   };
@@ -317,6 +364,75 @@ export default function MentalMonitoring() {
                   </p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/20 bg-primary/[0.02]">
+            <CardHeader>
+              <CardTitle className="font-serif flex items-center gap-2">
+                <CalendarClock className="w-5 h-5 text-primary" />
+                Backfill historical scores
+              </CardTitle>
+              <CardDescription>
+                Temporary entry for an earlier DASS-21 check-in. Enter final scores only; individual answers are never stored.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form className="space-y-5" onSubmit={(event) => {
+                event.preventDefault();
+                void submitBackfill();
+              }}>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="dass-backfill-taken-on">Date taken</Label>
+                    <Input
+                      id="dass-backfill-taken-on"
+                      type="date"
+                      max={getDassTakenDate(new Date())}
+                      value={backfillTakenOn}
+                      onChange={(event) => setBackfillTakenOn(event.target.value)}
+                      required
+                    />
+                  </div>
+                  {(['depression', 'anxiety', 'stress'] as DassScale[]).map((scale) => {
+                    const inputId = `dass-backfill-${scale}`;
+                    return (
+                      <div key={scale} className="space-y-2">
+                        <Label htmlFor={inputId}>{scaleLabels[scale]} score</Label>
+                        <Input
+                          id={inputId}
+                          type="number"
+                          min="0"
+                          max="42"
+                          step="2"
+                          inputMode="numeric"
+                          value={backfillScores[scale] ?? ''}
+                          onChange={(event) => updateBackfillScore(scale, event.target.value)}
+                          required
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="rounded-xl border border-primary/15 bg-background/70 p-4 text-sm text-muted-foreground">
+                  <p className="font-medium text-foreground">
+                    Visible only to you and your partner. It is never shared with a Circle of Friends room.
+                  </p>
+                  <p className="mt-1">
+                    DASS-21 is for monitoring, not diagnosis. The server checks the date and seven-day gap before saving.
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    className="bg-secondary hover:bg-secondary/90 text-secondary-foreground"
+                    disabled={!isBackfillComplete || backfillEntry.isPending}
+                  >
+                    {backfillEntry.isPending && <LoaderCircle className="mr-2 w-4 h-4 animate-spin" />}
+                    Save historical scores
+                  </Button>
+                </div>
+              </form>
             </CardContent>
           </Card>
 

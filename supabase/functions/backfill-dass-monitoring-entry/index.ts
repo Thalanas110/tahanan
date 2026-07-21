@@ -9,28 +9,9 @@ import {
   encryptDassScores,
   kekFromBase64,
 } from '../_shared/dassEncryption.ts';
-import {
-  getNextEligibleAt,
-  parseCreateDassBody,
-} from '../_shared/dassMonitoring.ts';
+import { parseBackfillDassBody } from '../_shared/dassMonitoring.ts';
 
 const KEY_VERSION = 'v1';
-
-async function nextEligibleAtForUser(
-  admin: ReturnType<typeof adminClient>,
-  userId: string,
-): Promise<Date | null> {
-  const { data, error } = await admin
-    .from('dass_monitoring_entries')
-    .select('taken_at')
-    .eq('submitted_by', userId)
-    .order('taken_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) throw new Error('Could not check DASS-21 eligibility');
-  return data ? getNextEligibleAt(data.taken_at) : null;
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -45,7 +26,7 @@ Deno.serve(async (req) => {
     } = await caller.auth.getUser();
     if (!user) return errorResponse('Not authenticated', 401);
 
-    const { coupleId, scores } = parseCreateDassBody(await req.json());
+    const { coupleId, scores, takenAt } = parseBackfillDassBody(await req.json());
     const admin = adminClient();
     const { data: membership, error: membershipError } = await admin
       .from('couple_members')
@@ -59,14 +40,6 @@ Deno.serve(async (req) => {
       return errorResponse(
         'Mental Monitoring is available only in your partner space',
         403,
-      );
-    }
-
-    const nextEligibleAt = await nextEligibleAtForUser(admin, user.id);
-    if (nextEligibleAt && nextEligibleAt > new Date()) {
-      return errorResponse(
-        `You can take DASS-21 again after ${nextEligibleAt.toISOString()}`,
-        409,
       );
     }
 
@@ -96,21 +69,16 @@ Deno.serve(async (req) => {
         wrapped_data_key: encrypted.wrappedDataKey,
         wrapped_data_key_iv: encrypted.wrappedDataKeyIv,
         key_version: KEY_VERSION,
+        taken_at: takenAt.toISOString(),
       })
       .select('id, submitted_by, taken_at')
       .single();
 
     if (insertError?.code === '23P01') {
-      const raceNextEligibleAt = await nextEligibleAtForUser(admin, user.id);
-      return errorResponse(
-        raceNextEligibleAt
-          ? `You can take DASS-21 again after ${raceNextEligibleAt.toISOString()}`
-          : 'You can take DASS-21 only once every seven days',
-        409,
-      );
+      return errorResponse('DASS-21 scores must be at least seven days apart', 409);
     }
     if (insertError || !row) {
-      return errorResponse('Could not save DASS-21 monitoring scores', 500);
+      return errorResponse('Could not save historical DASS-21 monitoring scores', 500);
     }
 
     return jsonResponse({
@@ -120,9 +88,8 @@ Deno.serve(async (req) => {
         takenAt: row.taken_at,
         ...scores,
       },
-      nextEligibleAt: getNextEligibleAt(row.taken_at).toISOString(),
     });
   } catch {
-    return errorResponse('Could not save DASS-21 monitoring scores', 400);
+    return errorResponse('Could not save historical DASS-21 monitoring scores', 400);
   }
 });

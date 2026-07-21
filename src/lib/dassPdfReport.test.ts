@@ -24,6 +24,18 @@ test('DASS PDF includes its title and monitoring disclaimer', () => {
   assert.match(content, /Score trends/);
 });
 
+test('DASS PDF retains a supplied Manila calendar date', () => {
+  const document = createDassPdfReport([
+    {
+      ...rows[0],
+      dateTaken: '2026-01-05',
+    },
+  ]);
+  const content = Buffer.from(document.output('arraybuffer')).toString('latin1');
+
+  assert.match(content, /2026-01-05/);
+});
+
 test('DASS PDF output starts with the PDF signature', () => {
   const document = createDassPdfReport(rows);
 

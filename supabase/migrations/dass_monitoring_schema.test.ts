@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
 const sql = readFileSync(
@@ -9,6 +9,7 @@ const sql = readFileSync(
 const tableDefinition = sql.match(
   /create table if not exists public\.dass_monitoring_entries\s*\(([\s\S]*?)\n\);/i,
 )?.[1];
+const takenAtMigrationPath = new URL('./0018_dass_monitoring_taken_at.sql', import.meta.url);
 
 test('DASS monitoring stores ciphertext only with no COF or plaintext score columns', () => {
   assert.match(
@@ -56,4 +57,33 @@ test('DASS monitoring creates its KEK in Vault and enforces a rolling seven-day 
     /exclude using gist\s*\(\s*submitted_by with =,\s*assessment_window with &&\s*\)/i,
   );
   assert.match(sql, /interval '7 days'/i);
+});
+
+test('DASS assessment time is immutable metadata and drives the weekly window', () => {
+  assert.equal(
+    existsSync(takenAtMigrationPath),
+    true,
+    'expected an additive DASS assessment-time migration',
+  );
+
+  const takenAtSql = readFileSync(takenAtMigrationPath, 'utf8');
+  assert.match(takenAtSql, /add column taken_at timestamptz/i);
+  assert.match(
+    takenAtSql,
+    /update public\.dass_monitoring_entries\s+set taken_at = created_at/i,
+  );
+  assert.match(takenAtSql, /alter column taken_at set not null/i);
+  assert.match(takenAtSql, /check \(taken_at <= created_at\)/i);
+  assert.match(
+    takenAtSql,
+    /new\.taken_at := coalesce\(new\.taken_at, new\.created_at\)/i,
+  );
+  assert.match(
+    takenAtSql,
+    /tstzrange\(\s*new\.taken_at,\s*new\.taken_at \+ interval '7 days'/i,
+  );
+  assert.doesNotMatch(
+    takenAtSql,
+    /\b(answers|responses|depression\s+int|anxiety\s+int|stress\s+int)\b/i,
+  );
 });

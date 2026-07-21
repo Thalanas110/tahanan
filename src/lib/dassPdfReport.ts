@@ -133,7 +133,7 @@ export function createDassPdfReport(
     document.setTextColor('#3B3028');
     document.setFont('helvetica', 'normal');
     document.setFontSize(8.5);
-    document.text(row.dateTaken.slice(0, 10), 16, y);
+    document.text(row.dateTaken, 16, y);
     document.text(String(row.depression), 62, y);
     document.text(String(row.anxiety), 89, y);
     document.text(String(row.stress), 112, y);
