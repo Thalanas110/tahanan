@@ -144,8 +144,7 @@ function isFinalDassScore(value: unknown): value is number {
     typeof value === 'number' &&
     Number.isInteger(value) &&
     value >= 0 &&
-    value <= 42 &&
-    value % 2 === 0
+    value <= 42
   );
 }
 
@@ -160,21 +159,7 @@ export function validateDassScores(value: unknown): DassScores {
     !isFinalDassScore(scores.anxiety) ||
     !isFinalDassScore(scores.stress)
   ) {
-    const allIntegerInRange = [
-      scores.depression,
-      scores.anxiety,
-      scores.stress,
-    ].every(
-      (score) =>
-        typeof score === 'number' &&
-        Number.isInteger(score) &&
-        score >= 0 &&
-        score <= 42,
-    );
-    if (!allIntegerInRange) {
-      throw new Error('DASS scores must be integers from 0 through 42');
-    }
-    throw new Error('DASS scores must be even');
+    throw new Error('DASS scores must be integers from 0 through 42');
   }
 
   return {

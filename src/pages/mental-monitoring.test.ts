@@ -17,19 +17,13 @@ test('Mental Monitoring displays the DASS safety disclosure and uses only the se
   assert.match(source, /serializeDassCsv/);
   assert.match(source, /getDassPdfBlob/);
   assert.match(source, /Export CSV/);
-  assert.match(source, /Export PDF/);
   assert.match(source, /Sensitive report/);
-  assert.match(source, /Backfill historical scores/);
-  assert.match(
-    source,
-    /Visible only to you and your partner[\s\S]*Circle of Friends/i,
-  );
-  assert.match(source, /type="date"/);
-  assert.match(source, /backfillEntry\.mutateAsync/);
+  assert.match(source, /Last 5 months/);
+  assert.match(source, /All time/);
+  assert.match(source, /filterDassEntriesToRecentMonths/);
+  assert.doesNotMatch(source, /backfill/i);
   assert.match(source, /entry\.takenAt/);
   assert.match(source, /formatDassTakenDate\(entry\.takenAt\)/);
-  assert.match(source, /getDassTakenDate\(new Date\(\)\)/);
-  assert.match(source, /server checks the date and seven-day gap/i);
   assert.doesNotMatch(source, /from\('dass_monitoring_entries'\)|VITE_.*(?:KEY|SECRET)/);
   assert.doesNotMatch(source, /functions\.invoke\('.*export/);
 });

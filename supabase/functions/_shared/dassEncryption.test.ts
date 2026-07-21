@@ -31,7 +31,7 @@ Deno.test('envelope encryption round-trips a DASS score bundle', async () => {
     submittedBy: 'author-1',
     keyVersion: 'v1',
   };
-  const scores = { depression: 12, anxiety: 8, stress: 16 };
+  const scores = { depression: 28, anxiety: 34, stress: 39 };
 
   const encrypted = await encryptDassScores(scores, kek, context);
 

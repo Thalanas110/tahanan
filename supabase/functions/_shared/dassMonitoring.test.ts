@@ -97,7 +97,7 @@ Deno.test('eligibility is exactly seven days after the entry timestamp', () => {
   );
 });
 
-Deno.test('backfill parser accepts only a calendar date and final scores', () => {
+Deno.test('backfill parser is not exposed after the temporary import period', () => {
   const parseBackfillDassBody = (
     dassMonitoring as unknown as {
       parseBackfillDassBody?: (
@@ -111,62 +111,5 @@ Deno.test('backfill parser accepts only a calendar date and final scores', () =>
     }
   ).parseBackfillDassBody;
 
-  assertEquals(typeof parseBackfillDassBody, 'function');
-  if (!parseBackfillDassBody) return;
-
-  const result = parseBackfillDassBody(
-    {
-      coupleId: 'couple-1',
-      takenOn: '2026-01-05',
-      depression: 12,
-      anxiety: 8,
-      stress: 16,
-    },
-    new Date('2026-07-21T08:00:00.000Z'),
-  );
-
-  assertEquals(result.coupleId, 'couple-1');
-  assertEquals(result.scores, { depression: 12, anxiety: 8, stress: 16 });
-  assertEquals(result.takenAt.toISOString(), '2026-01-04T16:00:00.000Z');
-});
-
-Deno.test('backfill parser rejects future, impossible, and expanded requests', () => {
-  const parseBackfillDassBody = (
-    dassMonitoring as unknown as {
-      parseBackfillDassBody?: (value: unknown, now?: Date) => unknown;
-    }
-  ).parseBackfillDassBody;
-
-  assertEquals(typeof parseBackfillDassBody, 'function');
-  if (!parseBackfillDassBody) return;
-
-  const now = new Date('2026-07-21T08:00:00.000Z');
-  assertThrows(() =>
-    parseBackfillDassBody({
-      coupleId: 'couple-1',
-      takenOn: '2026-07-22',
-      depression: 0,
-      anxiety: 0,
-      stress: 0,
-    }, now),
-  );
-  assertThrows(() =>
-    parseBackfillDassBody({
-      coupleId: 'couple-1',
-      takenOn: '2026-02-30',
-      depression: 0,
-      anxiety: 0,
-      stress: 0,
-    }, now),
-  );
-  assertThrows(() =>
-    parseBackfillDassBody({
-      coupleId: 'couple-1',
-      takenOn: '2026-01-05',
-      depression: 0,
-      anxiety: 0,
-      stress: 0,
-      responses: [],
-    }, now),
-  );
+  assertEquals(typeof parseBackfillDassBody, 'undefined');
 });

@@ -3,6 +3,7 @@ import test from 'node:test';
 
 import {
   buildDassReportRows,
+  filterDassEntriesToRecentMonths,
   getDassReportFilename,
   getOverallDassStatus,
   serializeDassCsv,
@@ -73,6 +74,41 @@ test('report dates keep the Manila assessment day for charts and exports', () =>
   );
 });
 
+test('recent DASS trends keep only the preceding five Manila calendar months', () => {
+  const entries = [
+    {
+      id: 'outside-window',
+      submittedBy: 'person-1',
+      takenAt: '2026-02-19T16:00:00.000Z',
+      depression: 4,
+      anxiety: 5,
+      stress: 6,
+    },
+    {
+      id: 'february-24',
+      submittedBy: 'person-1',
+      takenAt: '2026-02-23T16:00:00.000Z',
+      depression: 28,
+      anxiety: 34,
+      stress: 39,
+    },
+    {
+      id: 'current-day',
+      submittedBy: 'person-1',
+      takenAt: '2026-07-20T16:00:00.000Z',
+      depression: 8,
+      anxiety: 9,
+      stress: 10,
+    },
+  ];
+
+  assert.deepEqual(
+    filterDassEntriesToRecentMonths(entries, new Date('2026-07-21T12:00:00.000Z'))
+      .map((entry) => entry.id),
+    ['february-24', 'current-day'],
+  );
+});
+
 test('CSV has the requested headers and final score fields', () => {
   assert.equal(
     serializeDassCsv([
@@ -98,5 +134,13 @@ test('report filenames are deterministic and limited to csv or pdf', () => {
   assert.equal(
     getDassReportFilename('pdf', now),
     'dass-21-monitoring-report-2026-07-21.pdf',
+  );
+  assert.equal(
+    getDassReportFilename('pdf', now, 'last-5-months'),
+    'dass-21-monitoring-report-2026-07-21-last-5-months.pdf',
+  );
+  assert.equal(
+    getDassReportFilename('pdf', now, 'all-time'),
+    'dass-21-monitoring-report-2026-07-21-all-time.pdf',
   );
 });

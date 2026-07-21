@@ -10,6 +10,8 @@ export interface DassReportRow extends DassScores {
   overallStatus: DassSeverity;
 }
 
+export type DassReportScope = 'last-5-months' | 'all-time';
+
 const severityOrder: DassSeverity[] = [
   'Normal',
   'Mild',
@@ -48,6 +50,33 @@ export function formatDassTakenDate(value: string | Date): string {
     month: 'short',
     day: 'numeric',
   }).format(toDassDate(value));
+}
+
+function daysInMonth(year: number, month: number): number {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function getRecentDassWindowStart(now: Date): string {
+  const [year, month, day] = getDassTakenDate(now).split('-').map(Number);
+  const monthIndex = year * 12 + month - 1 - 5;
+  const targetYear = Math.floor(monthIndex / 12);
+  const targetMonth = (monthIndex % 12) + 1;
+  const targetDay = Math.min(day, daysInMonth(targetYear, targetMonth));
+
+  return `${targetYear}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+}
+
+export function filterDassEntriesToRecentMonths(
+  entries: readonly DassMonitoringEntry[],
+  now = new Date(),
+): DassMonitoringEntry[] {
+  const startDate = getRecentDassWindowStart(now);
+  const endDate = getDassTakenDate(now);
+
+  return entries.filter((entry) => {
+    const takenDate = getDassTakenDate(entry.takenAt);
+    return takenDate >= startDate && takenDate <= endDate;
+  });
 }
 
 export function getOverallDassStatus(scores: DassScores): DassSeverity {
@@ -95,6 +124,8 @@ export function serializeDassCsv(rows: readonly DassReportRow[]) {
 export function getDassReportFilename(
   extension: 'csv' | 'pdf',
   now = new Date(),
+  scope?: DassReportScope,
 ) {
-  return `dass-21-monitoring-report-${now.toISOString().slice(0, 10)}.${extension}`;
+  const scopeSuffix = scope ? `-${scope}` : '';
+  return `dass-21-monitoring-report-${now.toISOString().slice(0, 10)}${scopeSuffix}.${extension}`;
 }

@@ -8,14 +8,6 @@ interface CreateDassMonitoringResult {
   nextEligibleAt: string;
 }
 
-interface BackfillDassMonitoringInput extends DassScores {
-  takenOn: string;
-}
-
-interface BackfillDassMonitoringResult {
-  entry: DassMonitoringEntry;
-}
-
 export const dassMonitoringQueryKey = (coupleId: string | null) =>
   ['dass-monitoring', coupleId] as const;
 
@@ -42,17 +34,5 @@ export function useDassMonitoring(coupleId: string | null, enabled: boolean) {
       queryClient.invalidateQueries({ queryKey: dassMonitoringQueryKey(coupleId) }),
   });
 
-  const backfillEntry = useMutation({
-    mutationFn: (input: BackfillDassMonitoringInput) => {
-      if (!coupleId) throw new Error('A partner space is required');
-      return invokeEdgeFunction<BackfillDassMonitoringResult>(
-        'backfill-dass-monitoring-entry',
-        { coupleId, ...input },
-      );
-    },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: dassMonitoringQueryKey(coupleId) }),
-  });
-
-  return { historyQuery, createEntry, backfillEntry };
+  return { historyQuery, createEntry };
 }

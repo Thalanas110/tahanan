@@ -128,8 +128,7 @@ function validateScores(value: unknown): DassScores {
         typeof score === 'number' &&
         Number.isInteger(score) &&
         score >= 0 &&
-        score <= 42 &&
-        score % 2 === 0,
+        score <= 42,
     )
   ) {
     throw new Error('Invalid encrypted DASS score payload');

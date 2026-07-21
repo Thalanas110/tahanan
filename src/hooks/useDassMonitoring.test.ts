@@ -10,9 +10,8 @@ test('DASS client hook uses server endpoints and never handles persistence or en
   const source = readFileSync(hookPath, 'utf8');
   assert.match(source, /invokeEdgeFunction/);
   assert.match(source, /create-dass-monitoring-entry/);
-  assert.match(source, /backfill-dass-monitoring-entry/);
   assert.match(source, /get-dass-monitoring-history/);
-  assert.match(source, /backfillEntry/);
+  assert.doesNotMatch(source, /backfill/i);
   assert.doesNotMatch(
     source,
     /from\('dass_monitoring_entries'\)|AES|kek|encryptionKey|responses|answers/,

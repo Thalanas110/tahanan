@@ -45,15 +45,15 @@ test('rejects incomplete or invalid DASS-21 answers', () => {
   );
 });
 
-test('permits only final even DASS-21 scores from zero through 42', () => {
-  assert.deepEqual(validateDassScores({ depression: 0, anxiety: 42, stress: 14 }), {
-    depression: 0,
-    anxiety: 42,
-    stress: 14,
+test('permits final integer DASS-21 scores from zero through 42', () => {
+  assert.deepEqual(validateDassScores({ depression: 28, anxiety: 34, stress: 39 }), {
+    depression: 28,
+    anxiety: 34,
+    stress: 39,
   });
   assert.throws(
-    () => validateDassScores({ depression: 9, anxiety: 0, stress: 0 }),
-    /even/,
+    () => validateDassScores({ depression: 9.5, anxiety: 0, stress: 0 }),
+    /integers from 0 through 42/,
   );
   assert.throws(
     () => validateDassScores({ depression: 44, anxiety: 0, stress: 0 }),
