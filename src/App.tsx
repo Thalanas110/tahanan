@@ -22,6 +22,7 @@ import LoveNotes from "./pages/love-notes";
 import Tasks from "./pages/tasks";
 import Emergency from "./pages/emergency";
 import Health from "./pages/health";
+import MentalMonitoring from "./pages/mental-monitoring";
 import CalendarPage from "./pages/calendar";
 import TrustedContacts from "./pages/trusted-contacts";
 
@@ -84,6 +85,14 @@ function Router() {
         <ProtectedRoute>
           <AppLayout>
             <Health />
+          </AppLayout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/mental-monitoring">
+        <ProtectedRoute>
+          <AppLayout>
+            <MentalMonitoring />
           </AppLayout>
         </ProtectedRoute>
       </Route>

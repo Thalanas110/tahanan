@@ -7,6 +7,7 @@ import {
   CheckSquare,
   Settings,
   AlertTriangle,
+  Brain,
   MoreHorizontal,
   X,
   StickyNote,
@@ -16,6 +17,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNavbarLogic, useMobileNavLogic } from "./logic/Navbar";
+import { isMoreNavItemVisible } from "./logic/navbarVisibility";
 import { useActiveRoom } from "@/context/ActiveRoomContext";
 import {
   AlertDialog,
@@ -41,6 +43,7 @@ const MORE_NAV = [
   { href: "/calendar", label: "Calendar", icon: Calendar },
   { href: "/tasks", label: "Tasks", icon: CheckSquare },
   { href: "/health", label: "Health", icon: Stethoscope },
+  { href: "/mental-monitoring", label: "Mental Monitoring", icon: Brain, partnerOnly: true },
   { href: "/trusted-contacts", label: "Trusted Contacts", icon: Users, cofOnly: true },
   { href: "/settings", label: "Settings", icon: Settings },
 ] as const;
@@ -84,7 +87,9 @@ function MobileNav({ location }: { location: string }) {
   const { moreOpen, setMoreOpen, signOut } = useMobileNavLogic(location);
   const { hasCof, activeRoomType } = useActiveRoom();
 
-  const visibleMore = MORE_NAV.filter((n) => !('cofOnly' in n && n.cofOnly && !hasCof));
+  const visibleMore = MORE_NAV.filter((item) =>
+    isMoreNavItemVisible(item, hasCof, activeRoomType),
+  );
   const isMoreActive = visibleMore.some((n) => n.href === location);
 
   return (
@@ -319,8 +324,10 @@ function MobileNav({ location }: { location: string }) {
 
 export function Navbar() {
   const { location, signOut, upcomingMilestone } = useNavbarLogic();
-  const { hasCof } = useActiveRoom();
-  const visibleMore = MORE_NAV.filter((n) => !('cofOnly' in n && n.cofOnly && !hasCof));
+  const { hasCof, activeRoomType } = useActiveRoom();
+  const visibleMore = MORE_NAV.filter((item) =>
+    isMoreNavItemVisible(item, hasCof, activeRoomType),
+  );
   const allNavItems = [...PRIMARY_NAV, ...visibleMore];
 
   return (
