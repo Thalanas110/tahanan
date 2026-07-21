@@ -13,5 +13,12 @@ test('Mental Monitoring displays the DASS safety disclosure and uses only the se
   assert.match(source, /only you and your partner/i);
   assert.match(source, /useDassMonitoring/);
   assert.match(source, /LineChart/);
+  assert.match(source, /buildDassReportRows/);
+  assert.match(source, /serializeDassCsv/);
+  assert.match(source, /getDassPdfBlob/);
+  assert.match(source, /Export CSV/);
+  assert.match(source, /Export PDF/);
+  assert.match(source, /Sensitive report/);
   assert.doesNotMatch(source, /from\('dass_monitoring_entries'\)|VITE_.*(?:KEY|SECRET)/);
+  assert.doesNotMatch(source, /functions\.invoke\('.*export/);
 });

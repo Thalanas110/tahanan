@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import {
   Activity,
   CalendarClock,
+  Download,
+  FileText,
   HeartPulse,
   LoaderCircle,
   LockKeyhole,
@@ -30,6 +32,12 @@ import {
   type DassResponse,
   type DassScale,
 } from '@/lib/dass21';
+import { getDassPdfBlob } from '@/lib/dassPdfReport';
+import {
+  buildDassReportRows,
+  getDassReportFilename,
+  serializeDassCsv,
+} from '@/lib/dassReports';
 import { getPartnerMember } from '@/lib/roomParticipants';
 import {
   canBeginDassAssessment,
@@ -47,6 +55,17 @@ const scaleLabels: Record<DassScale, string> = {
   anxiety: 'Anxiety',
   stress: 'Stress',
 };
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
 
 function SeverityBadge({ scale, score }: { scale: DassScale; score: number }) {
   const severity = getDassSeverity(scale, score);
@@ -89,6 +108,10 @@ export default function MentalMonitoring() {
     [visibleEntries],
   );
   const latestEntry = visibleEntries.at(-1);
+  const reportRows = useMemo(
+    () => buildDassReportRows(visibleEntries),
+    [visibleEntries],
+  );
   const nextEligibleAt = historyQuery.data?.nextEligibleAt ?? null;
   const canStart =
     historyQuery.isSuccess &&
@@ -127,6 +150,27 @@ export default function MentalMonitoring() {
           ? error.message
           : 'Could not save DASS-21 monitoring scores.',
       );
+    }
+  };
+
+  const exportCsv = () => {
+    try {
+      downloadBlob(
+        new Blob([serializeDassCsv(reportRows)], {
+          type: 'text/csv;charset=utf-8',
+        }),
+        getDassReportFilename('csv'),
+      );
+    } catch {
+      toast.error('Could not create the CSV report.');
+    }
+  };
+
+  const exportPdf = () => {
+    try {
+      downloadBlob(getDassPdfBlob(reportRows), getDassReportFilename('pdf'));
+    } catch {
+      toast.error('Could not create the PDF report.');
     }
   };
 
@@ -304,6 +348,23 @@ export default function MentalMonitoring() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {reportRows.length > 0 && (
+                <div className="mb-5 flex flex-col gap-3 rounded-xl bg-muted/60 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Sensitive report: it includes final DASS-21 scores for this partner space. Keep downloaded files private.
+                  </p>
+                  <div className="flex shrink-0 gap-2">
+                    <Button type="button" variant="outline" onClick={exportCsv}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Export CSV
+                    </Button>
+                    <Button type="button" variant="outline" onClick={exportPdf}>
+                      <FileText className="mr-2 h-4 w-4" />
+                      Export PDF
+                    </Button>
+                  </div>
+                </div>
+              )}
               {chartData.length === 0 ? (
                 <div className="rounded-xl border border-dashed border-border px-6 py-10 text-center text-sm text-muted-foreground">
                   Complete a DASS-21 check-in to begin a score trend.
